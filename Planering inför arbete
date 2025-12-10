@@ -1,1 +1,49 @@
 # Planering
+Projektplan – HoganasEvents.com (Gymnasiearbete)
+1. Projektmål
+
+Skapa en webbplats där användare kan:
+
+Se alla typer av event i Höganäs.
+
+Logga in och skapa egna event (ex. loppis, trädgårdsförsäljning).
+
+Administratörer ska kunna granska och godkänna event.
+
+Webbplatsen ska vara modern, användarvänlig och mobilanpassad.
+
+2. Roller i gruppen
+
+Ni bestämmer själva vem som tar vilken roll, men förslaget är:
+
+A. Frontend-ansvarig (albert,Måns)
+
+Design i Figma
+
+HTML, CSS, JavaScript
+
+Mobilanpassning
+
+UI/UX
+
+B. Backend-ansvarig (ludwig)
+
+Databasstruktur (MySQL)
+
+API:er för event, användare, inloggning
+
+Adminpanel
+
+Säkerhet (lösenord, validering)
+
+C. Projektledare / Tester (ludwig)
+
+Dokumentation
+
+Testning & buggrapporter
+
+Presentationsmaterial
+
+Ser till att tidsplan följs
+
+(Roller kan rotera, men varje person ska vara huvudansvarig för sitt område.)
