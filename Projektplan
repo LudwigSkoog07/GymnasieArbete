@@ -1,0 +1,67 @@
+Titel:
+HoganasEvents.com – En modern webbplats för lokala event i Höganäs
+
+Ämne:
+Gymnasiearbete – Teknik / Webbutveckling
+
+Gruppmedlemmar:
+
+Ludwig Skoog
+
+Måns (manster1337)
+
+Albert Waitman
+
+Handledare:
+(Skriv in lärarens namn)
+
+Datum:
+(Dagens datum eller inlämningsdatum)
+
+✅ SIDA 2 – PLANERING & PROJEKTBESKRIVNING (Med förklaringar)
+1. Vad? (Vad är uppfinningen/projektet?)
+Vi ska skapa en webbplats, HoganasEvents.com, där användare kan se lokala event i Höganäs. Webbplatsen ska även låta användare logga in och skapa egna event som sedan granskas och godkänns av administratörer. Sidan ska vara modern, användarvänlig och fungera på både dator och mobil.
+
+2. Varför? (Varför denna uppfinning?)
+Det finns idag ingen komplett och samlad plattform för alla lokala event i Höganäs. Genom att utveckla denna webbplats förbättrar vi tillgängligheten till aktiviteter och gör det enklare för invånare att arrangera och hitta event. Projektet bygger vidare på tidigare eventplattformar men förbättrar dem genom lokal fokus, enkelhet och community‑inriktning.
+
+3. Hur? (Planering, arbetsprocess, material, tidsåtgång m.m.)
+Planering:
+Projektet delas upp i frontend, backend och dokumentation. Vi använder ett Gantt‑schema för att hålla tidsplanen.
+
+Material/verktyg:
+Figma (design), HTML/CSS/JavaScript (frontend), MySQL & API (backend), GitHub/Drive (lagring), eventuellt webbhotell.
+
+Arbetsmetod:
+
+Skapa design i Figma
+
+Utveckla frontend (startsida, eventlista, formulär)
+
+Bygga backend med databas för användare & event
+
+Adminpanel för godkännande av event
+
+Testning & förbättringar
+
+Marknadsföring:
+En enkel pitch + visuell presentation av hur sidan fungerar.
+
+Tidsåtgång:
+Fördelas enligt Gantt‑schemat (levande dokument).
+
+Budget:
+Eventuell kostnad för domän och webbhotell. Annars gratisverktyg.
+
+4. Förväntade resultat
+Vi förväntar oss att skapa en fullt fungerande prototyp av HoganasEvents.com som:
+
+Visar alla event på ett överskådligt sätt
+
+Tillåter användare att skapa egna event
+
+Har ett adminsystem för godkännande
+
+Är användarvänlig och mobilanpassad
+
+Det färdiga resultatet ska visa hur plattformen kan användas i verkligheten.
