@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="Global.css">
-  <link rel="stylesheet" href="Hem.css">
+  <link rel="stylesheet" href="Global.css" />
+  <link rel="stylesheet" href="Hem.css" />
   <title>Hem</title>
 </head>
 
@@ -17,7 +17,15 @@
         </div>
       </div>
 
-      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
+      <div class="center"></div>
+
+      <button
+        class="menu-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="mobileNav"
+        type="button"
+      >
         <span class="hamburger"></span>
       </button>
 
@@ -48,31 +56,49 @@
   </header>
 
   <main class="hem-main">
-    <section class="hero" aria-label="Hem">
+    <!-- HERO -->
+    <section class="hero" aria-label="Intro">
       <div class="hero-inner">
         <div class="hero-pill">
-          <span class="hero-pill-icon" aria-hidden="true">✦</span>
-          <span>Upptäck lokala händelser</span>
+          <img src="img/Eventslogg.png" alt="HöganäsEvents logga" class="hero-pill-logo">
+          HöganäsEvents
         </div>
 
         <h1 class="hero-title">
-          Vad händer i <span class="accent">Höganäs</span>
+          Upptäck <span class="accent">händelser</span> nära dig
         </h1>
 
+        <p class="hero-subtitle">
+          Se vad som händer i Höganäs – marknader, kultur, sport och lokala aktiviteter.
+        </p>
+
         <div class="hero-actions">
-          <a class="hero-cta" href="LaddaUp.html">+ Publicera händelse</a>
+          <a class="hero-cta" href="LaddaUp.html">Ladda upp en händelse</a>
         </div>
       </div>
     </section>
+
+    <!-- EVENTS LIST -->
     <section class="events-section" aria-label="Händelser">
       <div class="container">
+        <div class="events-head">
+          <h2 class="events-title">Senaste händelser</h2>
+          <span class="events-count" id="eventsCount">0 händelser</span>
+        </div>
+
         <div class="events-grid" id="eventsGrid">
-          <!-- Event cards will be dynamically inserted here -->
+          <!-- Cards renderas av events.js -->
+        </div>
+
+        <div class="events-empty" id="eventsEmpty" hidden>
+          <p>Inga händelser ännu. Var först med att lägga upp en!</p>
+          <a class="events-empty-cta" href="LaddaUp.html">Ladda upp en händelse</a>
         </div>
       </div>
     </section>
-                  
   </main>
+
+  <script src="Main.js"></script>
+  <script type="module" src="events.js"></script>
 </body>
-<script src="Main.js"></script>
 </html>

@@ -10,9 +10,7 @@
   padding: 28px 16px 64px;
 }
 
-.hero {
-  width: 100%;
-}
+.hero { width: 100%; }
 
 .hero-inner {
   max-width: 980px;
@@ -35,15 +33,10 @@
   border: 1px solid rgba(154, 93, 46, 0.18);
 }
 
-.hero-pill-icon {
-  display: inline-flex;
-  width: 18px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background: rgba(154, 93, 46, 0.10);
-  font-size: 12px;
+.hero-pill-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
 }
 
 /* ===== Headline ===== */
@@ -55,9 +48,7 @@
   font-weight: 800;
 }
 
-.hero-title .accent {
-  color: #2FA8E0; /* Blue like screenshot */
-}
+.hero-title .accent { color: #2FA8E0; }
 
 /* ===== Subtitle ===== */
 .hero-subtitle {
@@ -89,30 +80,205 @@
   border: 1px solid rgba(0,0,0,0.06);
   transition: transform 120ms ease, filter 120ms ease;
 }
+.hero-cta:hover { transform: translateY(-1px); filter: brightness(0.98); }
+.hero-cta:active { transform: translateY(0px); }
 
-.hero-cta:hover {
+/* ===== Small screens ===== */
+@media (max-width: 520px) {
+  .hero-inner { padding-top: 42px; }
+  .hero-pill { font-size: 13px; padding: 9px 12px; }
+  .hero-cta { width: 100%; max-width: 320px; }
+}
+
+/* =======================================================
+   EVENTS (matchar "Senaste händelser" i bilden)
+======================================================= */
+
+.events-section {
+  padding: 18px 16px 64px;
+}
+
+.events-section .container {
+  max-width: 980px; /* samma känsla som bilden */
+  margin: 0 auto;
+}
+
+.events-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 12px;
+}
+
+.events-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1f2430;
+}
+
+.events-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(31, 36, 48, 0.55);
+}
+
+/* Grid = 1 kolumn (som listan i screenshot) */
+.events-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* Kortet */
+.event-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* Översta raden: avatar + namn + "x timmar sedan" */
+.event-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.event-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #f5e7df;
+  color: #9a5d2e;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px solid rgba(154, 93, 46, 0.18);
+  flex: 0 0 auto;
+}
+
+.event-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.event-author {
+  font-weight: 800;
+  font-size: 14px;
+  color: #1f2430;
+  line-height: 1.1;
+}
+
+.event-timeago {
+  font-size: 12px;
+  color: rgba(31, 36, 48, 0.55);
+}
+
+/* Titel */
+.event-name {
+  margin: 4px 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #1f2430;
+}
+
+/* Meta-rad: plats / datum / tid */
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  color: rgba(31, 36, 48, 0.72);
+  font-size: 13px;
+}
+
+.event-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-meta svg {
+  width: 16px;
+  height: 16px;
+  color: #e48b64; /* varm ikonfärg som i screenshot */
+  flex: 0 0 auto;
+}
+
+/* Beskrivning */
+.event-desc {
+  margin: 0;
+  color: rgba(31, 36, 48, 0.72);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* Lite tajtare mobil */
+@media (max-width: 520px) {
+  .events-title { font-size: 24px; }
+  .event-card { padding: 14px; border-radius: 16px; }
+  .event-name { font-size: 18px; }
+}
+
+/* =========================
+   EVENTS: Empty state
+========================= */
+
+.events-empty {
+  margin-top: 14px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+}
+
+.events-empty p {
+  margin: 0 0 12px;
+  color: rgba(31, 36, 48, 0.72);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.events-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #2FA8E0;
+  color: #fff;
+  font-weight: 900;
+  text-decoration: none;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 14px 32px rgba(47, 168, 224, 0.20);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.events-empty-cta:hover {
   transform: translateY(-1px);
   filter: brightness(0.98);
 }
 
-.hero-cta:active {
+.events-empty-cta:active {
   transform: translateY(0px);
 }
 
-/* ===== "active" state för Hem-knappen (om du vill matcha bilden) =====
-   Om din Global.css redan har styles för .icon-btn, detta blir bara extra. */
-
-/* ===== Small screens ===== */
+/* Mobil: CTA tar full bredd */
 @media (max-width: 520px) {
-  .hero-inner {
-    padding-top: 42px;
-  }
-  .hero-pill {
-    font-size: 13px;
-    padding: 9px 12px;
-  }
-  .hero-cta {
+  .events-empty-cta {
     width: 100%;
-    max-width: 320px;
   }
 }
