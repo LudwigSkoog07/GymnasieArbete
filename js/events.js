@@ -1,96 +1,100 @@
 import { supabase } from "./supabaseClient.js";
 
 const grid = document.getElementById("eventsGrid");
-const count = document.getElementById("eventsCount");
 const empty = document.getElementById("eventsEmpty");
+const countEl = document.getElementById("eventsCount");
 
-function initials(name = "Anonym") {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map(w => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function timeAgo(isoString) {
-  if (!isoString) return "nyss";
-  const now = new Date();
-  const then = new Date(isoString);
-  const diffMs = now - then;
-
-  const min = Math.floor(diffMs / 60000);
-  if (min < 1) return "nyss";
-  if (min < 60) return `${min} min sedan`;
-
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h} timmar sedan`;
-
-  const d = Math.floor(h / 24);
-  return `${d} dagar sedan`;
-}
-
-function formatDate(dateStr) {
-  // "YYYY-MM-DD" -> "15 juni" (sv)
+function timeAgo(dateStr) {
   if (!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("sv-SE", { day: "numeric", month: "long" });
+  const d = new Date(dateStr);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  const h = Math.floor(diff / 3600);
+
+  if (h < 1) return "Nyss";
+  if (h === 1) return "1 timme sedan";
+  return `${h} timmar sedan`;
 }
 
-function formatTime(timeStr) {
-  // "HH:MM:SS" eller "HH:MM" -> "HH:MM"
-  if (!timeStr) return "";
-  return timeStr.slice(0, 5);
-}
+function renderEvent(ev) {
+  const imgs = ev.image_urls || [];
+  const firstImg = imgs.length > 0 ? imgs[0] : null;
 
-function render(events) {
-  grid.innerHTML = "";
+  return `
+    <article class="event-card">
 
-  events.forEach(e => {
-    const author = e.author || "Anonym";
+      ${
+        firstImg
+          ? `<div class="event-image">
+               <img src="${firstImg}" alt="Event bild">
+             </div>`
+          : ""
+      }
 
-    grid.innerHTML += `
-      <article class="event-card">
+      <div class="event-body">
         <div class="event-top">
-          <div class="event-avatar" aria-hidden="true">${initials(author)}</div>
-          <div class="event-who">
-            <div class="event-author">${author}</div>
-            <div class="event-timeago">${timeAgo(e.created_at)}</div>
+          <div class="event-avatar">H</div>
+          <div>
+            <div class="event-author">${ev.author || "Anonym"}</div>
+            <div class="event-timeago">${timeAgo(ev.created_at)}</div>
           </div>
         </div>
 
-        <h3 class="event-name">${e.title}</h3>
+        <h3 class="event-name">${ev.title}</h3>
 
-        <ul class="event-meta" aria-label="Eventinfo">
-          <li>📍 ${e.place}</li>
-          <li>📅 ${formatDate(e.date)}</li>
-          ${e.time ? `<li>⏰ ${formatTime(e.time)}</li>` : ``}
+        <ul class="event-meta">
+          <li>📍 ${ev.place}</li>
+          <li>📅 ${ev.date}</li>
+          ${
+            ev.time
+              ? `<li>🕒 ${ev.time.slice(0, 5)}</li>`
+              : ""
+          }
+          ${
+            ev.end_time
+              ? `<li>⏳ ${ev.end_time === "sent" ? "Sent" : ev.end_time}</li>`
+              : ""
+          }
         </ul>
 
-        ${e.info ? `<p class="event-desc">${e.info}</p>` : ``}
-      </article>
-    `;
-  });
+        ${
+          ev.info
+            ? `<p class="event-desc">${ev.info}</p>`
+            : ""
+        }
 
-  count.textContent = `${events.length} händelser`;
-  if (empty) empty.hidden = events.length !== 0;
+        ${
+          imgs.length > 1
+            ? `<div class="event-more">
+                 +${imgs.length - 1} fler bilder
+               </div>`
+            : ""
+        }
+      </div>
+    </article>
+  `;
 }
 
 async function loadEvents() {
   const { data, error } = await supabase
     .from("events")
-    .select("id, created_at, title, place, date, time, info, author")
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error(error);
-    render([]);
+    grid.innerHTML = `<p>Kunde inte ladda events.</p>`;
     return;
   }
 
-  render(data || []);
+  countEl.textContent = `${data.length} händelser`;
+
+  if (data.length === 0) {
+    empty.hidden = false;
+    return;
+  }
+
+  empty.hidden = true;
+  grid.innerHTML = data.map(renderEvent).join("");
 }
 
 loadEvents();

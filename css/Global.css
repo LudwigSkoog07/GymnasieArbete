@@ -123,9 +123,25 @@ body::after{
   height: var(--header-h);
   z-index: 1000;
 
-  background: rgba(10,15,31,0.55);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  backdrop-filter: blur(16px);
+  /* Apple-ish glass */
+  background: rgba(255,255,255,0.62);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  border-bottom: 1px solid rgba(15,23,42,0.10);
+
+  /* soft shadow + thin highlight */
+  box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+}
+
+
+.site-header::before{
+  content:"";
+  position:absolute;
+  left: 0; right: 0; top: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.85);
+  pointer-events:none;
 }
 
 .site-header .container{
@@ -149,10 +165,10 @@ body::after{
   height: 40px;
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-  transform: translateZ(0);
+
+  border: 1px solid rgba(15,23,42,0.10);
+  background: rgba(255,255,255,0.70);
+  box-shadow: 0 10px 20px rgba(15,23,42,0.10);
 }
 .avatar img{ width:100%; height:100%; object-fit: cover; }
 
@@ -171,57 +187,54 @@ body::after{
   align-items:center;
   justify-content:flex-start;
   gap: 10px;
-
   padding: 0 14px;
 
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.68);
+  border: 1px solid rgba(15,23,42,0.10);
   border-radius: 999px;
 
   text-decoration:none;
   cursor:pointer;
 
-  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
-  transition: transform var(--dur-1) var(--ease-pop),
-              background var(--dur-2) var(--ease-out),
-              border-color var(--dur-2) var(--ease-out),
-              box-shadow var(--dur-2) var(--ease-out);
+  box-shadow: 0 10px 20px rgba(15,23,42,0.08);
+  transition: transform 180ms cubic-bezier(.2,1.1,.2,1),
+              background 180ms ease,
+              border-color 180ms ease,
+              box-shadow 180ms ease;
 }
 
 .icon-btn svg{
   width: 20px;
   height: 20px;
   fill: none;
-  stroke: rgba(255,255,255,0.86);
+  stroke: rgba(15,23,42,0.78); /* mörk på ljus header */
   stroke-width: 1.9;
 }
 
 .icon-btn::after{
   content: attr(title);
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 800;
   letter-spacing: -0.01em;
-  color: rgba(255,255,255,0.88);
+  color: rgba(15,23,42,0.78);
   line-height: 1;
   white-space: nowrap;
 }
 
 .icon-btn:hover{
   transform: translateY(-2px);
-  background: rgba(255,255,255,0.09);
-  border-color: rgba(255,255,255,0.16);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.40);
+  background: rgba(255,255,255,0.82);
+  border-color: rgba(15,23,42,0.14);
+  box-shadow: 0 16px 28px rgba(15,23,42,0.12);
 }
-
-.icon-btn:active{ transform: translateY(0px) scale(0.99); }
 
 .icon-btn.is-active{
-  background: linear-gradient(90deg, rgba(124,92,255,0.22), rgba(47,230,214,0.16));
-  border-color: rgba(124,92,255,0.35);
+  background: rgba(24,119,242,0.12);
+  border-color: rgba(24,119,242,0.22);
 }
-.icon-btn.is-active svg{
-  stroke: var(--accent2);
-}
+.icon-btn.is-active svg{ stroke: #1877f2; }
+.icon-btn.is-active::after{ color: #1877f2; }
+
 
 /* Focus */
 .icon-btn:focus-visible,
@@ -252,7 +265,7 @@ body::after{
   position: relative;
   width: 22px;
   height: 2px;
-  background: rgba(255,255,255,0.92);
+  background: rgba(0, 0, 0, 0.92);
   border-radius: 999px;
   display:block;
   transition: background var(--dur-2) var(--ease-out);
@@ -264,7 +277,7 @@ body::after{
   left:0;
   width: 22px;
   height: 2px;
-  background: rgba(255,255,255,0.92);
+  background: rgba(0, 0, 0, 0.92);
   border-radius: 999px;
   transition: transform var(--dur-2) var(--ease-out),
               top var(--dur-2) var(--ease-out),
@@ -350,3 +363,43 @@ body::after{
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
+/* ===== Brand in header (logo + title + subtitle) ===== */
+.brand{
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+
+  text-decoration: none;
+  color: rgba(15,23,42,0.88);
+
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.brand-name{
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  font-size: 14px;
+  color: rgba(15,23,42,0.92);
+  white-space: nowrap;
+}
+
+.brand-tag{
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(15,23,42,0.58);
+  white-space: nowrap;
+}
+
+/* Gör left-sidan tight och snygg */
+.left{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+
+/* På små skärmar: göm undertexten (valfritt men brukar bli bäst) */
+@media (max-width: 520px){
+  .brand-tag{ display:none; }
+}

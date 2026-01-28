@@ -15,6 +15,11 @@
         <div class="avatar" aria-hidden="true">
           <img src="../img/Eventslogg.png" alt="Profile">
         </div>
+
+        <a class="brand" href="Hem.html" aria-label="HöganäsEvents hem">
+          <span class="brand-name">HöganäsEvents</span>
+          <span class="brand-tag">Lokalt • Snabbt • Enkelt</span>
+        </a>
       </div>
 
       <button
@@ -69,47 +74,83 @@
       <h1 class="hero-title">Ladda upp händelse</h1>
       <p class="hero-subtitle">Dela ett evenemang med ditt lokalsamhälle</p>
     </section>
+        <section class="card" aria-label="Formulär">
+          <form id="eventForm" class="eventForm" autocomplete="off">
+      <div class="field">
+        <label for="title">Titel <span class="req">*</span></label>
+        <input id="title" name="title" type="text"
+                placeholder="T.ex. Sommarmarknad på Torget" required />
+      </div>
 
-    <section class="card" aria-label="Formulär">
-      <form id="eventForm" class="eventForm" autocomplete="off">
-        <div class="field">
-          <label for="title">Titel <span class="req">*</span></label>
-          <input id="title" name="title" type="text"
-                 placeholder="T.ex. Sommarmarknad på Torget" required />
+      <div class="field">
+        <label for="place">Plats <span class="req">*</span></label>
+        <input id="place" name="place" type="text"
+                placeholder="T.ex. Stora Torget, Centrum" required />
+      </div>
+
+      <div class="field">
+        <label for="date">Datum <span class="req">*</span></label>
+        <input id="date" name="date" type="date" required />
+      </div>
+
+      <div class="field">
+        <label for="startTime">Starttid <span class="req">*</span></label>
+        <input id="startTime" name="startTime" type="time" required />
+      </div>
+
+      <div class="field">
+        <label for="endTime">Sluttid</label>
+
+        <div class="time-row">
+          <input id="endTime" name="endTime" type="time" />
+
+          <label class="toggle" for="endLate">
+            <input id="endLate" type="checkbox" />
+            <span class="toggle-ui" aria-hidden="true"></span>
+            <span class="toggle-text">Sent</span>
+          </label>
         </div>
 
-        <div class="field">
-          <label for="place">Plats <span class="req">*</span></label>
-          <input id="place" name="place" type="text"
-                 placeholder="T.ex. Stora Torget, Centrum" required />
+        <div class="hint" id="endHint">Välj sluttid eller markera “Sent”.</div>
+      </div>
+
+      <div class="field full">
+        <label for="info">Information</label>
+        <textarea id="info" name="info"
+                  placeholder="Skriv en kort beskrivning..." rows="5"></textarea>
+      </div>
+
+      <div class="field full">
+        <label for="images">Bilder</label>
+
+        <div class="upload-box">
+          <input id="images" name="images" type="file" accept="image/*" multiple />
+          <div class="upload-meta">
+            <div class="upload-title">Lägg till bilder (valfritt)</div>
+            <div class="upload-sub">PNG/JPG • max 5 bilder rekommenderat</div>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="date">Datum <span class="req">*</span></label>
-          <input id="date" name="date" type="date" required />
-        </div>
+        <div class="img-grid" id="imgPreview" hidden></div>
+      </div>
 
-        <div class="field">
-          <label for="time">Tid</label>
-          <input id="time" name="time" type="time" />
-        </div>
+      <div class="form-msg" id="formMsg" aria-live="polite"></div>
 
-        <div class="field full">
-          <label for="info">Information</label>
-          <textarea id="info" name="info"
-                    placeholder="Skriv en kort beskrivning..." rows="5"></textarea>
-        </div>
-
-        <div class="form-msg" id="formMsg" aria-live="polite"></div>
-
-        <div class="actions full">
-          <button class="primary" type="submit">Ladda upp</button>
-        </div>
+      <div class="actions full">
+        <button class="primary" type="submit">Ladda upp</button>
+      </div>
       </form>
+
     </section>
   </main>
 
   <script src="../js/Main.js"></script>
-  <script type="module" src="../js/laddaupp.js"></script>
+
+<script type="module">
+  import { requireLogin } from "../js/guard.js";
+  await requireLogin();
+</script>
+
+<script type="module" src="../js/laddaupp.js"></script>
 </body>
 </html>
