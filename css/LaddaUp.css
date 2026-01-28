@@ -1,227 +1,261 @@
 /* =========================
-   Upload page layout
+   LaddaUp.css — NEW DESIGN
+   Upload form card + “fat” animations
 ========================= */
 
-.page-laddaup {
-  background: #F2F4F7;
-  color: #1f2430;
-}
+.page-laddaup { color: rgba(255,255,255,0.92); }
 
-.page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 28px 16px 72px;
-}
+/* You already have .page in Global.css */
 
-/* =========================
-   Hero
-========================= */
-
-.upload-hero {
+/* ===== Hero ===== */
+.upload-hero{
   text-align: center;
   padding: 22px 16px 18px;
 }
 
-.hero-icon {
-  width: 58px;
-  height: 58px;
+.hero-icon{
+  width: 62px;
+  height: 62px;
   margin: 0 auto 14px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: #2FA8E0;
-  box-shadow: 0 18px 38px rgba(47, 168, 224, 0.25);
+
+  display:grid;
+  place-items:center;
+
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(124,92,255,0.95), rgba(47,230,214,0.80));
+  box-shadow: 0 26px 70px rgba(0,0,0,0.55);
+
+  transform: translateZ(0);
+  animation: iconDrop 700ms cubic-bezier(.2,1.2,.2,1) both;
+  position: relative;
+  overflow:hidden;
 }
 
-.upload-svg {
-  width: 26px;
-  height: 26px;
-  stroke: white;
-  stroke-width: 2.4;
+.hero-icon::after{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 55%);
+  transform: rotate(10deg) translateX(-22%);
+  opacity: .65;
+  animation: shineSweep 1.8s ease-in-out infinite;
+}
+
+@keyframes iconDrop{
+  from { opacity:0; transform: translateY(-12px) scale(0.9) rotate(-6deg); }
+  to   { opacity:1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes shineSweep{
+  0%   { transform: rotate(10deg) translateX(-30%); }
+  55%  { transform: rotate(10deg) translateX(20%); }
+  100% { transform: rotate(10deg) translateX(20%); }
+}
+
+/* upload svg */
+.upload-svg{
+  width: 28px;
+  height: 28px;
+  stroke: rgba(255,255,255,0.96);
+  stroke-width: 2.6;
   fill: none;
+  filter: drop-shadow(0 12px 16px rgba(0,0,0,0.25));
 }
 
-.hero-logo {
-  width: 55px;
-  height: 55px;
-  object-fit: contain;
-}
-
-.hero-icon .sparkle {
-  color: #fff;
-  font-size: 18px;
-  transform: translateY(-1px);
-}
-
-.hero-title {
+.hero-title{
   margin: 0;
   font-size: clamp(34px, 4vw, 52px);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.06;
-  font-weight: 900;
+  font-weight: 950;
+
+  background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(124,92,255,0.90), rgba(47,230,214,0.92));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.hero-subtitle {
+.hero-subtitle{
   margin: 10px auto 0;
-  max-width: 520px;
-  color: rgba(31, 36, 48, 0.65);
+  max-width: 560px;
+  color: rgba(255,255,255,0.68);
   font-size: 14px;
+  line-height: 1.65;
+  font-weight: 750;
 }
 
-/* =========================
-   Card
-========================= */
-
-.card {
+/* ===== Card ===== */
+.card{
   margin-top: 18px;
-  background: #fff;
-  border-radius: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 14px 42px rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
   padding: 18px;
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 22px 70px rgba(0,0,0,0.50);
+  backdrop-filter: blur(14px);
+
+  transform: translateZ(0);
+  animation: cardRise 680ms cubic-bezier(.16,1,.3,1) both;
 }
 
-/* =========================
-   Form layout
-========================= */
+@keyframes cardRise{
+  from { opacity:0; transform: translateY(14px) scale(0.985); filter: blur(6px); }
+  to   { opacity:1; transform: translateY(0) scale(1); filter: blur(0); }
+}
 
-.eventForm {
-  display: grid;
+/* ===== Form layout ===== */
+.eventForm{
+  display:grid;
   grid-template-columns: 1fr;
   gap: 14px;
 }
 
-.field {
-  display: grid;
+.field{
+  display:grid;
   gap: 8px;
 }
 
-.field.full {
-  grid-column: 1 / -1;
-}
+.field.full{ grid-column: 1 / -1; }
 
-label {
+label{
   font-size: 13px;
-  font-weight: 800;
-  color: rgba(31, 36, 48, 0.92);
+  font-weight: 950;
+  color: rgba(255,255,255,0.86);
+  letter-spacing: -0.01em;
 }
 
-.req {
-  color: #2FA8E0;
-  font-weight: 900;
+.req{
+  color: var(--accent2);
+  font-weight: 950;
   margin-left: 4px;
 }
 
 /* Inputs */
 input,
-textarea {
+textarea{
   width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(10,15,31,0.45);
+  color: rgba(255,255,255,0.92);
+
   padding: 12px 14px;
   font-size: 14px;
-  color: #1f2430;
+
   outline: none;
-  transition: box-shadow 140ms ease, border-color 140ms ease;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+  transition: transform var(--dur-1) var(--ease-pop),
+              border-color var(--dur-2) var(--ease-out),
+              box-shadow var(--dur-2) var(--ease-out),
+              background var(--dur-2) var(--ease-out);
 }
 
-textarea {
+textarea{
   resize: vertical;
   min-height: 140px;
 }
 
+input::placeholder,
+textarea::placeholder{
+  color: rgba(255,255,255,0.42);
+  font-weight: 650;
+}
+
 input:focus,
-textarea:focus {
-  border-color: rgba(47, 168, 224, 0.55);
-  box-shadow: 0 0 0 4px rgba(47, 168, 224, 0.12);
+textarea:focus{
+  border-color: rgba(47,230,214,0.55);
+  box-shadow: 0 0 0 5px rgba(47,230,214,0.14), 0 18px 50px rgba(0,0,0,0.45);
+  background: rgba(10,15,31,0.58);
+  transform: translateY(-1px);
 }
 
-/* =========================
-   Validation (snygg)
-========================= */
-
+/* ===== Validation ===== */
 .field input.is-invalid,
-.field textarea.is-invalid {
-  border-color: rgba(220, 38, 38, 0.55);
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
+.field textarea.is-invalid{
+  border-color: rgba(255,88,110,0.55);
+  box-shadow: 0 0 0 5px rgba(255,88,110,0.12), 0 18px 50px rgba(0,0,0,0.45);
 }
 
-.field .error-text {
+.field .error-text{
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(220, 38, 38, 0.92);
-  font-weight: 700;
+  color: rgba(255,140,154,0.95);
+  font-weight: 900;
 }
 
-.form-msg {
+.form-msg{
   margin-top: 4px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
+.form-msg.is-success{ color: rgba(47,230,214,0.95); }
+.form-msg.is-error{ color: rgba(255,88,110,0.95); }
 
-.form-msg.is-success { color: rgba(22, 163, 74, 0.95); }
-.form-msg.is-error { color: rgba(220, 38, 38, 0.95); }
-
-/* =========================
-   Actions
-========================= */
-
-.actions {
-  display: flex;
-  justify-content: center;
+/* ===== Actions ===== */
+.actions{
+  display:flex;
+  justify-content:center;
   padding-top: 6px;
 }
+.actions.full{ grid-column: 1 / -1; }
 
-.actions.full {
-  grid-column: 1 / -1;
-}
-
-button.primary {
+button.primary{
+  position: relative;
   border: 0;
   cursor: pointer;
   padding: 13px 22px;
-  border-radius: 14px;
-  background: #2FA8E0;
-  color: #fff;
-  font-weight: 900;
-  box-shadow: 0 14px 32px rgba(47, 168, 224, 0.24);
-  transition: transform 120ms ease, filter 120ms ease;
-  min-width: 180px;
+  border-radius: 16px;
+
+  background: linear-gradient(90deg, rgba(124,92,255,1), rgba(47,230,214,0.92));
+  color: #061018;
+
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  min-width: 190px;
+
+  box-shadow: 0 26px 70px rgba(0,0,0,0.55);
+  transition: transform 160ms cubic-bezier(.2,1.2,.2,1),
+              filter 180ms ease;
+  overflow:hidden;
 }
 
-button.primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.98);
+button.primary::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 55%);
+  transform: rotate(12deg) translateX(-22%);
+  opacity: .6;
+  transition: transform 520ms cubic-bezier(.16,1,.3,1);
 }
 
-button.primary:active {
-  transform: translateY(0px);
+button.primary:hover{
+  transform: translateY(-3px) scale(1.01);
+  filter: brightness(1.03);
 }
-
-button.primary:disabled {
-  opacity: 0.75;
+button.primary:hover::before{
+  transform: rotate(12deg) translateX(18%);
+}
+button.primary:active{
+  transform: translateY(-1px) scale(0.995);
+}
+button.primary:disabled{
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
+  filter: none;
 }
 
-/* =========================
-   Desktop grid (som i bilden)
-========================= */
+/* ===== Desktop grid ===== */
+@media (min-width: 820px){
+  .card{ padding: 22px; }
 
-@media (min-width: 820px) {
-  .card { padding: 22px; }
-
-  .eventForm {
+  .eventForm{
     grid-template-columns: 1fr 1fr;
     gap: 16px 18px;
   }
 
-  textarea {
-    min-height: 165px;
-  }
-
-  .actions {
-    padding-top: 10px;
-  }
+  textarea{ min-height: 170px; }
+  .actions{ padding-top: 10px; }
 }

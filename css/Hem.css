@@ -1,284 +1,331 @@
-/* ===== Page base ===== */
-.page-hem {
-  background: #F2F4F7;
-  color: #1f2430;
+/* =========================
+   Hem.css — NEW DESIGN
+   Hero + Events (glassy, punchy)
+========================= */
+
+.page-hem { color: rgba(255,255,255,0.92); }
+
+.hem-main{
+  padding: 28px 16px 74px;
 }
 
-/* Om Global.css redan sätter container-bredd, kan du ta bort detta.
-   Annars hjälper det att få samma “luft” som bilden. */
-.hem-main {
-  padding: 28px 16px 64px;
-}
+/* ===== HERO ===== */
+.hero{ width: 100%; }
 
-.hero { width: 100%; }
-
-.hero-inner {
-  max-width: 980px;
+.hero-inner{
+  max-width: 1020px;
   margin: 0 auto;
   text-align: center;
-  padding: 56px 16px 24px;
+  padding: 56px 16px 22px;
 }
 
-/* ===== Pill / label ===== */
-.hero-pill {
-  display: inline-flex;
-  align-items: center;
+.hero-pill{
+  display:inline-flex;
+  align-items:center;
   gap: 10px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: #d4ebf7;
-  color: #2FA8E0;
+
+  background: linear-gradient(90deg, rgba(124,92,255,0.18), rgba(47,230,214,0.12));
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 16px 38px rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+
+  color: rgba(255,255,255,0.88);
   font-size: 14px;
-  font-weight: 600;
-  border: 1px solid rgba(154, 93, 46, 0.18);
-}
-
-.hero-pill-logo {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-}
-
-/* ===== Headline ===== */
-.hero-title {
-  margin: 18px 0 10px;
-  font-size: clamp(36px, 4.3vw, 56px);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
   font-weight: 800;
+  letter-spacing: -0.01em;
+
+  transform: translateZ(0);
+  animation: pillPop 700ms cubic-bezier(.2,1.2,.2,1) both;
 }
 
-.hero-title .accent { color: #2FA8E0; }
+@keyframes pillPop{
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-/* ===== Subtitle ===== */
-.hero-subtitle {
+.hero-pill-logo{
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+}
+
+.hero-title{
+  margin: 18px 0 10px;
+  font-size: clamp(38px, 4.6vw, 62px);
+  line-height: 1.03;
+  letter-spacing: -0.03em;
+  font-weight: 950;
+
+  /* neon-ish gradient text */
+  background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(124,92,255,0.90), rgba(47,230,214,0.92));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  text-shadow: 0 18px 60px rgba(124,92,255,0.12);
+}
+
+.hero-subtitle{
   margin: 0 auto;
-  max-width: 640px;
+  max-width: 680px;
   font-size: 16px;
-  line-height: 1.6;
-  color: rgba(31, 36, 48, 0.70);
+  line-height: 1.65;
+  color: rgba(255,255,255,0.70);
 }
 
-/* ===== CTA button ===== */
-.hero-actions {
+.hero-actions{
   margin-top: 18px;
-  display: flex;
-  justify-content: center;
+  display:flex;
+  justify-content:center;
 }
 
-.hero-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 22px;
-  border-radius: 12px;
-  background: #2FA8E0;
-  color: white;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 10px 24px rgba(47, 168, 224, 0.25);
-  border: 1px solid rgba(0,0,0,0.06);
-  transition: transform 120ms ease, filter 120ms ease;
-}
-.hero-cta:hover { transform: translateY(-1px); filter: brightness(0.98); }
-.hero-cta:active { transform: translateY(0px); }
+/* CTA (reuses .hero-cta class if you have it) */
+.hero-cta{
+  position: relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 14px 20px;
+  border-radius: 16px;
 
-/* ===== Small screens ===== */
-@media (max-width: 520px) {
-  .hero-inner { padding-top: 42px; }
-  .hero-pill { font-size: 13px; padding: 9px 12px; }
-  .hero-cta { width: 100%; max-width: 320px; }
-}
+  background: linear-gradient(90deg, rgba(124,92,255,1), rgba(47,230,214,0.92));
+  color: #061018;
 
-/* =======================================================
-   EVENTS (matchar "Senaste händelser" i bilden)
-======================================================= */
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  text-decoration:none;
 
-.events-section {
-  padding: 18px 16px 64px;
+  border: 0;
+  box-shadow: 0 22px 54px rgba(0,0,0,0.45);
+  transition: transform 160ms cubic-bezier(.2,1.2,.2,1), filter 200ms ease;
+
+  overflow:hidden;
 }
 
-.events-section .container {
-  max-width: 980px; /* samma känsla som bilden */
+.hero-cta::before{
+  content:"";
+  position:absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 55%);
+  transform: rotate(12deg) translateX(-20%);
+  opacity: .65;
+  transition: transform 520ms cubic-bezier(.16,1,.3,1);
+}
+
+.hero-cta:hover{
+  transform: translateY(-3px) scale(1.01);
+  filter: brightness(1.02);
+}
+.hero-cta:hover::before{
+  transform: rotate(12deg) translateX(18%);
+}
+.hero-cta:active{
+  transform: translateY(-1px) scale(0.995);
+}
+
+/* ===== EVENTS ===== */
+.events-section{
+  padding: 18px 16px 74px;
+}
+
+.events-section .container{
+  max-width: 1020px;
   margin: 0 auto;
 }
 
-.events-head {
-  display: flex;
+.events-head{
+  display:flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin: 18px 0 12px;
+  margin: 22px 0 12px;
 }
 
-.events-title {
+.events-title{
   margin: 0;
   font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: #1f2430;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: rgba(255,255,255,0.92);
 }
 
-.events-count {
+.events-count{
   font-size: 14px;
-  font-weight: 600;
-  color: rgba(31, 36, 48, 0.55);
+  font-weight: 800;
+  color: rgba(255,255,255,0.60);
 }
 
-/* Grid = 1 kolumn (som listan i screenshot) */
-.events-grid {
-  display: grid;
+/* list/grid */
+.events-grid{
+  display:grid;
   grid-template-columns: 1fr;
   gap: 14px;
 }
 
-/* Kortet */
-.event-card {
-  background: #fff;
-  border-radius: 18px;
+/* Card */
+.event-card{
+  position: relative;
+  border-radius: 22px;
   padding: 16px 16px 14px;
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
-  border: 1px solid rgba(15, 23, 42, 0.06);
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.38);
+  backdrop-filter: blur(14px);
+
+  transform: translateZ(0);
+  transition: transform 180ms cubic-bezier(.2,1.1,.2,1),
+              box-shadow 220ms ease,
+              border-color 220ms ease;
+  overflow:hidden;
 }
 
-/* Översta raden: avatar + namn + "x timmar sedan" */
-.event-top {
-  display: flex;
-  align-items: center;
+/* animated glow edge */
+.event-card::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background: linear-gradient(90deg, rgba(124,92,255,0.0), rgba(124,92,255,0.35), rgba(47,230,214,0.25), rgba(124,92,255,0.0));
+  opacity: .0;
+  filter: blur(10px);
+  transition: opacity 220ms ease;
+  pointer-events:none;
+}
+
+.event-card:hover{
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 26px 70px rgba(0,0,0,0.55);
+  border-color: rgba(255,255,255,0.18);
+}
+.event-card:hover::before{ opacity: .8; }
+
+/* Top row */
+.event-top{
+  display:flex;
+  align-items:center;
   gap: 12px;
   margin-bottom: 10px;
 }
 
-.event-avatar {
-  width: 36px;
-  height: 36px;
+.event-avatar{
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #f5e7df;
-  color: #9a5d2e;
-  font-weight: 800;
+  display:grid;
+  place-items:center;
+
+  background: linear-gradient(180deg, rgba(124,92,255,0.25), rgba(47,230,214,0.14));
+  border: 1px solid rgba(255,255,255,0.16);
+  color: rgba(255,255,255,0.92);
+  font-weight: 950;
   font-size: 13px;
-  border: 1px solid rgba(154, 93, 46, 0.18);
-  flex: 0 0 auto;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.32);
 }
 
-.event-who {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.event-author {
-  font-weight: 800;
+.event-author{
+  font-weight: 950;
   font-size: 14px;
-  color: #1f2430;
+  color: rgba(255,255,255,0.92);
   line-height: 1.1;
 }
 
-.event-timeago {
+.event-timeago{
   font-size: 12px;
-  color: rgba(31, 36, 48, 0.55);
+  color: rgba(255,255,255,0.60);
 }
 
-/* Titel */
-.event-name {
+/* Title */
+.event-name{
   margin: 4px 0 10px;
   font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: #1f2430;
+  font-weight: 950;
+  letter-spacing: -0.015em;
+  color: rgba(255,255,255,0.92);
 }
 
-/* Meta-rad: plats / datum / tid */
-.event-meta {
-  display: flex;
+/* Meta */
+.event-meta{
+  display:flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
+  align-items:center;
   margin: 0 0 10px;
   padding: 0;
-  list-style: none;
-  color: rgba(31, 36, 48, 0.72);
+  list-style:none;
+
+  color: rgba(255,255,255,0.72);
   font-size: 13px;
+  font-weight: 750;
 }
 
-.event-meta li {
-  display: inline-flex;
-  align-items: center;
+.event-meta li{
+  display:inline-flex;
+  align-items:center;
   gap: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
 }
 
-.event-meta svg {
+.event-meta svg{
   width: 16px;
   height: 16px;
-  color: #e48b64; /* varm ikonfärg som i screenshot */
+  color: var(--warm);
   flex: 0 0 auto;
 }
 
-/* Beskrivning */
-.event-desc {
+/* Desc */
+.event-desc{
   margin: 0;
-  color: rgba(31, 36, 48, 0.72);
+  color: rgba(255,255,255,0.70);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
-/* Lite tajtare mobil */
-@media (max-width: 520px) {
-  .events-title { font-size: 24px; }
-  .event-card { padding: 14px; border-radius: 16px; }
-  .event-name { font-size: 18px; }
-}
-
-/* =========================
-   EVENTS: Empty state
-========================= */
-
-.events-empty {
+/* Empty state */
+.events-empty{
   margin-top: 14px;
-  background: #ffffff;
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.38);
+  backdrop-filter: blur(14px);
 }
 
-.events-empty p {
+.events-empty p{
   margin: 0 0 12px;
-  color: rgba(31, 36, 48, 0.72);
+  color: rgba(255,255,255,0.72);
   font-size: 14px;
-  line-height: 1.55;
-  font-weight: 600;
+  line-height: 1.6;
+  font-weight: 800;
 }
 
-.events-empty-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.events-empty-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   padding: 12px 16px;
-  border-radius: 14px;
-  background: #2FA8E0;
-  color: #fff;
-  font-weight: 900;
-  text-decoration: none;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 14px 32px rgba(47, 168, 224, 0.20);
-  transition: transform 120ms ease, filter 120ms ease;
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(124,92,255,1), rgba(47,230,214,0.92));
+  color: #061018;
+  font-weight: 950;
+  text-decoration:none;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  transition: transform 160ms cubic-bezier(.2,1.2,.2,1);
 }
+.events-empty-cta:hover{ transform: translateY(-3px); }
+.events-empty-cta:active{ transform: translateY(-1px) scale(0.995); }
 
-.events-empty-cta:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.98);
-}
-
-.events-empty-cta:active {
-  transform: translateY(0px);
-}
-
-/* Mobil: CTA tar full bredd */
-@media (max-width: 520px) {
-  .events-empty-cta {
-    width: 100%;
-  }
+@media (max-width: 520px){
+  .hero-inner{ padding-top: 44px; }
+  .events-title{ font-size: 24px; }
+  .event-card{ padding: 14px; border-radius: 18px; }
+  .event-name{ font-size: 18px; }
+  .events-empty-cta{ width: 100%; }
 }
