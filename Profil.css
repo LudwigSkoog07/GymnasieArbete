@@ -1,0 +1,148 @@
+/* Page layout */
+.profile-page {
+  padding: 48px 16px;
+}
+
+.profile-card {
+  width: min(860px, 92vw);
+  margin: 0 auto;
+  background: #D9D9D9;          /* matches the big grey block */
+  border-radius: 4px;
+  padding: 22px 26px;
+}
+
+/* Top row */
+.profile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profile-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #FFFFFF;          /* white circle avatar */
+  flex: 0 0 auto;
+}
+
+/* Name + edit icon */
+.profile-name {
+  min-width: 0;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.edit-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.edit-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #111827;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Upload button */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #1D4ED8;          /* blue */
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.upload-btn:hover {
+  filter: brightness(0.95);
+}
+
+/* Body */
+.profile-body {
+  margin-top: 14px;
+}
+
+.info-label {
+  display: block;
+  font-size: 12px;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.info-box {
+  width: 320px;                 /* matches the small box on the left */
+  max-width: 100%;
+  background: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+
+  font-size: 14px;
+  line-height: 1.35;
+  color: #111827;
+
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* Responsive: keep the same “left block + button right” feeling */
+@media (max-width: 520px) {
+  .profile-top {
+    align-items: flex-start;
+  }
+
+  .upload-btn {
+    padding: 9px 12px;
+    border-radius: 10px;
+  }
+
+  .info-box {
+    width: 100%;
+  }
+}

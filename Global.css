@@ -1,93 +1,298 @@
-/* Global.css (minimal foundation) */
+/* Global.css (rewritten + improved hamburger + mobile menu + backdrop) */
 
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-weight: 400;
   line-height: 1.5;
-
   color: #111;
   background-color: #F2F4F7;
-
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* Remove default margin */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  background: #F2F4F7;
+  padding-top: 64px; /* header height */
 }
 
 input, button, textarea {
   font: inherit;
 }
+
+/* =========================
+   HEADER
+========================= */
 .site-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 64px;
-            background: #ffffff;
-            z-index: 1000;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
 
-        .site-header .container {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+.site-header .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-        .left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(180deg,#e5e7eb,#d1d5db);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e5e7eb, #d1d5db);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
 
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-        .right {
-            display: flex;
-            gap: 24px;
-            align-items: center;
-        }
+.right {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
 
-        .icon-btn {
-            width: 36px;
-            height: 36px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-        }
+/* Icon buttons */
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
 
-        .icon-btn svg { fill: none; stroke: #111827; stroke-width: 1.5; width: 22px; height: 22px; }
+.icon-btn svg {
+  fill: none;
+  stroke: #111827;
+  stroke-width: 1.5;
+  width: 22px;
+  height: 22px;
+}
 
+.icon-btn.is-active svg {
+  stroke: #3b82f6;
+}
 
-        body {
-            padding-top: 64px;
-        }
+.icon-btn:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* =========================
+   HAMBURGER BUTTON (better)
+========================= */
+.menu-toggle {
+  display: none; /* shown on mobile */
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.menu-toggle:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.menu-toggle:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.hamburger {
+  position: relative;
+  width: 22px;
+  height: 2px;
+  background: #111827;
+  border-radius: 999px;
+  display: block;
+  transition: background 220ms ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 22px;
+  height: 2px;
+  background: #111827;
+  border-radius: 999px;
+  transition: transform 220ms ease, top 220ms ease, opacity 220ms ease;
+}
+
+.hamburger::before { top: -7px; }
+.hamburger::after  { top:  7px; }
+
+/* X state */
+.menu-toggle[aria-expanded="true"] .hamburger {
+  background: transparent;
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* =========================
+   BACKDROP (mobile overlay)
+   Add a div: <div class="nav-backdrop" id="navBackdrop"></div>
+========================= */
+.nav-backdrop {
+  position: fixed;
+  inset: 64px 0 0 0; /* below header */
+  background: rgba(0, 0, 0, 0.20);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 999;
+}
+
+.nav-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================
+   MOBILE NAV
+========================= */
+@media (max-width: 768px) {
+  .site-header .container {
+    padding: 0 12px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    order: 3;
+  }
+
+  /* dropdown card menu */
+  .right {
+    position: fixed;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+
+    background: #ffffff;
+    border: 1px solid rgba(17, 24, 39, 0.10);
+    border-radius: 14px;
+
+    padding: 10px;
+
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+
+    /* closed state */
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+
+    transition: opacity 180ms ease, transform 180ms ease;
+    z-index: 1001;
+  }
+
+  .right.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* make nav items look like menu rows */
+  .icon-btn {
+    width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 12px;
+    gap: 12px;
+    font-size: 16px;
+    color: #111827;
+    text-decoration: none;
+  }
+
+  .icon-btn:hover {
+    background: rgba(17, 24, 39, 0.05);
+  }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .icon-btn::after {
+    content: attr(title);
+    display: inline-block;
+  }
+
+  .icon-btn.is-active {
+    background: #f0f4ff;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+@media (prefers-reduced-motion: reduce) {
+  .right,
+  .nav-backdrop,
+  .hamburger,
+  .hamburger::before,
+  .hamburger::after {
+    transition: none !important;
+  }
+}

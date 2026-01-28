@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="Global.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index</title>
@@ -14,36 +14,66 @@
         <div class="container">
             <div class="left">
                 <div class="avatar" aria-hidden="true">
-                    <img src="Eventslogg.png" alt="Profile">
+                    <img src="img/Eventslogg.png" alt="Profile">
                 </div>
             </div>
 
             <div class="center"></div>
 
+            <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="hamburger"></span>
+            </button>
+
             <div class="right" role="navigation" aria-label="Primary">
-                <button  class="icon-btn" title="Home" aria-label="Home" >
+                <a href="Hem.html" class="icon-btn" title="Home" aria-label="Home">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M3 11.5L12 4l9 7.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M4 12v7a1 1 0 0 0 1 1h3v-5h8v5h3a1 1 0 0 0 1-1v-7" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                </button>
+                </a>
 
-                <button class="icon-btn" title="Upload" aria-label="Upload">
+                <a href="LaddaUp.html" class="icon-btn" title="Upload" aria-label="Upload">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M12 16V6" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M8 10l4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M21 20H3" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                </button>
+                </a>
 
-                <button class="icon-btn" title="Account" aria-label="Account">
+                <a href="Profil.html" class="icon-btn" title="Account" aria-label="Account">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
                         <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                </button>
+                </a>
             </div>
         </div>
     </header>
+    <script>
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navMenu = document.querySelector('.right');
+
+        menuToggle.addEventListener('click', () => {
+            const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+            menuToggle.setAttribute('aria-expanded', !isExpanded);
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when a link is clicked
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                menuToggle.setAttribute('aria-expanded', 'false');
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.site-header')) {
+                menuToggle.setAttribute('aria-expanded', 'false');
+                navMenu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
