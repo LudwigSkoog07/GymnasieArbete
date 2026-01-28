@@ -1,7 +1,20 @@
+/**
+ * profil.js (rewritten v2)
+ * - Username kan bara ändras via penna
+ * - "Pending username" sparas lokalt vid sidbyte/refresh och syncas vid nästa load
+ * - About autosave (debounce)
+ * - Avatar upload + save avatar_url
+ * - Mina events lista
+ * - Logout
+ */
+
 import { supabase } from "./supabaseClient.js";
 import { requireLogin } from "./guard.js";
 
-const metaEl = document.querySelector(".profil-meta");
+/* =========================
+   DOM
+========================= */
+const metaEl = document.getElementById("profileMeta");
 const myEventsEl = document.getElementById("myEvents");
 const myEmptyEl = document.getElementById("myEmpty");
 
@@ -10,23 +23,78 @@ const nameEl = document.getElementById("profileName");
 
 const avatarImg = document.getElementById("avatarImg");
 const avatarInput = document.getElementById("avatarInput");
-const avatarFallback = document.querySelector(".avatar-fallback");
+const avatarFallback = document.getElementById("avatarFallback");
 
 const logoutBtn = document.getElementById("logoutBtn");
 
+// Username edit UI
+const editNameBtn = document.getElementById("editNameBtn");
+const nameEditor = document.getElementById("nameEditor");
+const nameInput = document.getElementById("nameInput");
+const saveNameBtn = document.getElementById("saveNameBtn");
+const cancelNameBtn = document.getElementById("cancelNameBtn");
+const nameHint = document.getElementById("nameHint");
+
 const AVATAR_BUCKET = "avatars";
 
+/* =========================
+   Utils
+========================= */
 function fmtTime(t) {
   if (!t) return "";
-  return String(t).slice(0, 5); // "13:00:00" -> "13:00"
+  return String(t).slice(0, 5);
 }
-function fmtDate(d) {
-  return d || "";
+
+function initialsFrom(name) {
+  const s = (name || "").trim();
+  if (!s) return "??";
+  return s.slice(0, 2).toUpperCase();
+}
+
+function safeExt(fileName) {
+  const ext = (fileName?.split(".").pop() || "jpg").toLowerCase();
+  return ext.replace(/[^a-z0-9]/g, "") || "jpg";
+}
+
+function validUsername(s) {
+  const v = (s || "").trim();
+  if (v.length < 3 || v.length > 22) return false;
+  return /^[a-zA-Z0-9._-]+$/.test(v);
+}
+
+/* =========================
+   Local persistence (username)
+========================= */
+const KEY_DRAFT = (uid) => `profile_username_draft_${uid}`;
+const KEY_PENDING = (uid) => `profile_username_pending_${uid}`;
+
+function lsGet(k) {
+  try { return localStorage.getItem(k) || ""; } catch { return ""; }
+}
+function lsSet(k, v) {
+  try { localStorage.setItem(k, v); } catch {}
+}
+function lsDel(k) {
+  try { localStorage.removeItem(k); } catch {}
+}
+
+/* =========================
+   UI helpers
+========================= */
+function setNameEditorOpen(open) {
+  if (!nameEditor) return;
+  nameEditor.hidden = !open;
+
+  if (editNameBtn) editNameBtn.style.display = open ? "none" : "grid";
+
+  // lås input om inte edit-läge
+  if (nameInput) nameInput.disabled = !open;
+
+  if (!open && nameHint) nameHint.textContent = "3–22 tecken. Bokstäver/nr/._-";
 }
 
 function setAvatar(url, fallbackText) {
   if (avatarFallback) avatarFallback.textContent = fallbackText || "??";
-
   if (!avatarImg) return;
 
   if (url) {
@@ -36,18 +104,15 @@ function setAvatar(url, fallbackText) {
   } else {
     avatarImg.removeAttribute("src");
     avatarImg.style.display = "none";
-    if (avatarFallback) avatarFallback.style.display = "inline";
+    if (avatarFallback) avatarFallback.style.display = "grid";
   }
 }
 
-function safeExt(fileName) {
-  const ext = (fileName?.split(".").pop() || "jpg").toLowerCase();
-  return ext.replace(/[^a-z0-9]/g, "") || "jpg";
-}
-
+/* =========================
+   DB
+========================= */
 async function ensureProfileRow(user) {
   const username = user.email?.split("@")[0] || "User";
-
   const { error } = await supabase
     .from("profiles")
     .upsert({ id: user.id, username }, { onConflict: "id" });
@@ -56,28 +121,41 @@ async function ensureProfileRow(user) {
 }
 
 async function loadProfile(user) {
-  await ensureProfileRow(user);
+  // 1) säkerställ rad
+  try {
+    await ensureProfileRow(user);
+  } catch (e) {
+    console.warn("⚠️ ensureProfileRow failed (RLS?), continuing:", e?.message);
+  }
 
+  // 2) hämta profil
   const { data, error } = await supabase
     .from("profiles")
-    .select("username, about, avatar_url")
+    .select("username, full_name, about, avatar_url")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
+  if (error && error.code !== "PGRST116") console.error("❌ loadProfile error:", error);
 
   const username = data?.username || (user.email?.split("@")[0] || "User");
-  if (nameEl) nameEl.textContent = username;
+  const displayName = data?.full_name || username;
 
+  if (nameEl) nameEl.textContent = displayName;
   if (aboutEl) aboutEl.value = data?.about || "";
 
-  const initials = username.slice(0, 2).toUpperCase();
-  setAvatar(data?.avatar_url || null, initials);
+  // Sätt input till sparat username (inte displayName)
+  if (nameInput) nameInput.value = username;
+
+  setAvatar(data?.avatar_url || null, initialsFrom(displayName));
+
+  // Editor ska vara stängd + låst tills man trycker penna
+  setNameEditorOpen(false);
+
+  return username; // returnera “server truth”
 }
 
 async function saveAbout(user) {
   if (!aboutEl) return;
-
   const about = aboutEl.value || "";
 
   const { error } = await supabase
@@ -85,15 +163,26 @@ async function saveAbout(user) {
     .update({ about, updated_at: new Date().toISOString() })
     .eq("id", user.id);
 
-  if (error) console.error(error);
+  if (error) console.error("❌ saveAbout error:", error);
+}
+
+async function saveUsername(user, proposed) {
+  const username = proposed.trim();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ username, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
+
+  if (error) throw error;
+  return username;
 }
 
 async function uploadAvatar(user, file) {
   const ext = safeExt(file.name);
-  const path = `${user.id}/avatar.${ext}`; // samma fil varje gång => overwrite
+  const path = `${user.id}/avatar.${ext}`;
 
-  const { error: upErr } = await supabase
-    .storage
+  const { error: upErr } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type || undefined });
 
@@ -101,8 +190,8 @@ async function uploadAvatar(user, file) {
 
   const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
   const publicUrl = data?.publicUrl;
+  if (!publicUrl) throw new Error("Could not get public URL from avatars bucket");
 
-  // Spara URL i profiles
   const { error: dbErr } = await supabase
     .from("profiles")
     .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
@@ -113,23 +202,27 @@ async function uploadAvatar(user, file) {
   return publicUrl;
 }
 
+/* =========================
+   My events
+========================= */
 function renderCard(ev) {
   const imgs = ev.image_urls || [];
   const first = imgs.length ? imgs[0] : null;
 
   const timeText = ev.time ? `🕒 ${fmtTime(ev.time)}` : "";
-  const endText = ev.end_time ? ` ⏳ ${ev.end_time === "sent" ? "Sent" : ev.end_time}` : "";
+  const endText =
+    ev.end_time ? ` ⏳ ${ev.end_time === "sent" ? "Sent" : fmtTime(ev.end_time)}` : "";
 
   return `
     <article class="my-card">
       <div class="my-top">
         <div class="my-img">
-          ${first ? `<img src="${first}" alt="Event bild" loading="lazy">` : ``}
+          ${first ? `<img src="${first}" alt="Event bild" loading="lazy">` : `<div class="my-img-empty"></div>`}
         </div>
 
-        <div style="min-width:0;">
-          <h3 class="my-title">${ev.title}</h3>
-          <p class="my-meta">📍 ${ev.place} • 📅 ${fmtDate(ev.date)} ${timeText}${endText}</p>
+        <div class="my-text">
+          <h3 class="my-title">${ev.title || ""}</h3>
+          <p class="my-meta">📍 ${ev.place || ""} • 📅 ${ev.date || ""} ${timeText}${endText}</p>
         </div>
       </div>
 
@@ -139,49 +232,88 @@ function renderCard(ev) {
 }
 
 async function loadMyEvents(user) {
-  // VIKTIGT: byt author från "Anonym" -> user.id (rekommenderat)
-  // Om din events-tabell fortfarande använder author som text = "Anonym",
-  // så måste du ändra laddaupp.js så author = user.id.
+  if (metaEl) metaEl.textContent = "Laddar händelser...";
+
   const { data, error } = await supabase
     .from("events")
-    .select("*")
-    .eq("author", user.id)
+    .select("id, created_at, title, place, date, time, end_time, info, image_urls, user_id")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("❌ loadMyEvents error:", error);
     if (metaEl) metaEl.textContent = "Kunde inte ladda händelser.";
     return;
   }
 
-  const count = data.length;
-  if (metaEl) metaEl.textContent = `${count} publicerade händelser`;
+  const list = data || [];
+  if (metaEl) metaEl.textContent = `${list.length} publicerade händelser`;
 
   if (!myEventsEl) return;
 
-  if (count === 0) {
+  if (list.length === 0) {
     myEventsEl.innerHTML = "";
     if (myEmptyEl) myEmptyEl.style.display = "block";
     return;
   }
 
   if (myEmptyEl) myEmptyEl.style.display = "none";
-  myEventsEl.innerHTML = data.map(renderCard).join("");
+  myEventsEl.innerHTML = list.map(renderCard).join("");
 }
 
+/* =========================
+   Pending username sync
+========================= */
+async function trySyncPendingUsername(user) {
+  const pending = lsGet(KEY_PENDING(user.id)).trim();
+  if (!pending) return null;
+
+  // om pending är ogiltig -> rensa
+  if (!validUsername(pending)) {
+    lsDel(KEY_PENDING(user.id));
+    lsDel(KEY_DRAFT(user.id));
+    return null;
+  }
+
+  try {
+    const saved = await saveUsername(user, pending);
+    lsDel(KEY_PENDING(user.id));
+    lsDel(KEY_DRAFT(user.id));
+    return saved;
+  } catch (e) {
+    // behåll pending så vi kan försöka igen nästa gång
+    console.warn("⚠️ Pending username sync failed:", e?.message || e);
+    return null;
+  }
+}
+
+/* =========================
+   Init
+========================= */
 async function main() {
   const session = await requireLogin();
   const user = session.user;
 
-  // Profil
-  try {
-    await loadProfile(user);
-  } catch (e) {
-    console.error(e);
-    if (nameEl) nameEl.textContent = "Kunde inte ladda profil";
+  // 1) om vi har pending från tidigare sidbyte -> försök synca direkt
+  const pendingSaved = await trySyncPendingUsername(user);
+
+  // 2) ladda profil
+  const serverUsername = await loadProfile(user);
+
+  // 3) om pendingSaved lyckades, uppdatera UI så det syns direkt
+  if (pendingSaved) {
+    if (nameEl) nameEl.textContent = pendingSaved;
+    if (nameInput) nameInput.value = pendingSaved;
+    if (!avatarImg?.getAttribute("src")) setAvatar(null, initialsFrom(pendingSaved));
   }
 
-  // About: debounce spara i DB
+  // 4) om du hade en draft (ändrat men ej sparat) – visa den när du öppnar editorn
+  const existingDraft = lsGet(KEY_DRAFT(user.id)).trim();
+
+  let currentUsername = pendingSaved || serverUsername; // vad som faktiskt gäller “just nu”
+  let isEditing = false;
+
+  // About autosave (debounce)
   if (aboutEl) {
     let t;
     aboutEl.addEventListener("input", () => {
@@ -190,6 +322,86 @@ async function main() {
     });
   }
 
+  // Username edit: öppna endast via penna
+  editNameBtn?.addEventListener("click", () => {
+    isEditing = true;
+
+    // om draft finns -> använd den, annars servervärdet
+    const toShow = existingDraft || currentUsername;
+
+    if (nameInput) nameInput.value = toShow;
+
+    setNameEditorOpen(true);
+    nameInput?.focus();
+    nameInput?.select();
+  });
+
+  // Spara draft medan man skriver (så lämnar du sidan så finns texten kvar)
+  nameInput?.addEventListener("input", () => {
+    if (!isEditing) return;
+    lsSet(KEY_DRAFT(user.id), nameInput.value || "");
+  });
+
+  cancelNameBtn?.addEventListener("click", () => {
+    isEditing = false;
+    setNameEditorOpen(false);
+
+    // lämna draft kvar (så du kan fortsätta senare) ELLER rensa:
+    // lsDel(KEY_DRAFT(user.id));
+  });
+
+  saveNameBtn?.addEventListener("click", async () => {
+    if (!nameInput) return;
+
+    const proposed = nameInput.value;
+
+    if (!validUsername(proposed)) {
+      if (nameHint) nameHint.textContent = "Ogiltigt. 3–22 tecken och bara a-z 0-9 . _ -";
+      return;
+    }
+
+    try {
+      const saved = await saveUsername(user, proposed);
+
+      currentUsername = saved;
+      if (nameEl) nameEl.textContent = saved;
+      if (nameInput) nameInput.value = saved;
+
+      // om ingen avatar: uppdatera initialer
+      if (!avatarImg?.getAttribute("src")) setAvatar(null, initialsFrom(saved));
+
+      // rensa draft/pending
+      lsDel(KEY_DRAFT(user.id));
+      lsDel(KEY_PENDING(user.id));
+
+      isEditing = false;
+      setNameEditorOpen(false);
+    } catch (e) {
+      console.error("❌ saveUsername failed:", e);
+      if (nameHint) nameHint.textContent = "Kunde inte spara. Kolla RLS/policies.";
+    }
+  });
+
+  nameInput?.addEventListener("keydown", (e) => {
+    if (!isEditing) return;
+    if (e.key === "Enter") saveNameBtn?.click();
+    if (e.key === "Escape") cancelNameBtn?.click();
+  });
+
+  // Spara “pending” när man lämnar sidan (om man ändrat men inte sparat)
+  window.addEventListener("beforeunload", () => {
+    if (!isEditing || !nameInput) return;
+
+    const draft = (nameInput.value || "").trim();
+    if (!draft) return;
+
+    // bara om den skiljer sig från current
+    if (draft !== currentUsername && validUsername(draft)) {
+      lsSet(KEY_PENDING(user.id), draft);
+      lsSet(KEY_DRAFT(user.id), draft);
+    }
+  });
+
   // Avatar upload
   avatarInput?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
@@ -197,22 +409,31 @@ async function main() {
 
     try {
       const url = await uploadAvatar(user, file);
-      const username = (nameEl?.textContent || "User");
-      setAvatar(url, username.slice(0, 2).toUpperCase());
+      const displayName = nameEl?.textContent || "User";
+      setAvatar(url, initialsFrom(displayName));
     } catch (err) {
-      console.error(err);
-      alert("Kunde inte spara profilbild. Kolla bucket/policies.");
+      console.error("❌ Avatar upload failed:", err);
+      alert(
+        "Kunde inte spara profilbild.\n\n" +
+          "Kontrollera:\n" +
+          "1) Storage bucket 'avatars' existerar\n" +
+          "2) Storage policies tillåter upload i '" + user.id + "/*'\n" +
+          "3) Filtypen är JPG/PNG/WebP\n\n" +
+          "Detalj: " + (err?.message || "okänt fel")
+      );
     }
   });
 
-  // Logga ut
+  // Logout
   logoutBtn?.addEventListener("click", async () => {
     await supabase.auth.signOut();
     window.location.href = "Auth.html";
   });
 
-  // Mina events
+  // Load my events
   await loadMyEvents(user);
 }
 
-main();
+main().catch((err) => {
+  console.error("❌ Profile init failed:", err);
+});

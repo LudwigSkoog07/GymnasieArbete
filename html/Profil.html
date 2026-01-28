@@ -63,28 +63,49 @@
   </header>
 
   <main class="profil-main">
-    <!-- PROFILE CARD -->
     <section class="profil-card" aria-label="Profil">
       <div class="profil-top">
         <div class="profil-user">
           <div class="profil-avatar" aria-hidden="true">
             <img id="avatarImg" alt="Profilbild" style="display:none;" />
-            <span class="avatar-fallback">LS</span>
+            <span class="avatar-fallback" id="avatarFallback">??</span>
           </div>
 
           <div class="profil-info">
-            <h1 class="profil-name">Laddar...</h1>
-            <p class="profil-meta">0 publicerade händelser</p>
+            <div class="name-row">
+              <h1 class="profil-name" id="profileName">Laddar...</h1>
+
+              <button id="editNameBtn" class="icon-pill" type="button"
+                aria-label="Redigera användarnamn" title="Redigera">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20h9" stroke-linecap="round"/>
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div id="nameEditor" class="name-editor" hidden>
+              <input id="nameInput" class="name-input" type="text" maxlength="22"
+                autocomplete="off" spellcheck="false" disabled />
+              <div class="name-actions">
+                <button id="saveNameBtn" class="mini-btn primary" type="button">Spara</button>
+                <button id="cancelNameBtn" class="mini-btn" type="button">Avbryt</button>
+              </div>
+              <div id="nameHint" class="name-hint">3–22 tecken. Bokstäver/nr/._-</div>
+            </div>
+
+            <p class="profil-meta" id="profileMeta">0 publicerade händelser</p>
 
             <div class="profil-controls">
-              <label class="avatar-upload">
-                <span class="avatar-upload-label">Profilbild</span>
-                <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" />
+              <label class="upload-pill" for="avatarInput">
+                <span class="upload-title">Profilbild</span>
+                <span class="upload-sub">Välj fil</span>
               </label>
+              <input id="avatarInput" class="upload-hidden" type="file"
+                accept="image/png,image/jpeg,image/webp" />
 
-              <button id="btnLogout" class="profil-btn ghost" type="button">
-                Logga ut
-              </button>
+              <button id="logoutBtn" class="profil-btn ghost" type="button">Logga ut</button>
             </div>
           </div>
         </div>
@@ -105,7 +126,6 @@
       </div>
     </section>
 
-    <!-- MY EVENTS -->
     <h2 class="profil-section-title">Mina händelser</h2>
 
     <div class="my-events" id="myEvents" aria-label="Mina upplagda händelser"></div>

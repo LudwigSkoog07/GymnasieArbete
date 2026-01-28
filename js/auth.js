@@ -1,3 +1,10 @@
+/**
+ * Authentication sida: Logga in eller skapa konto
+ * - Hantera signUp med profile-creation
+ * - Hantera signIn med error-recovery
+ * - Robust error handling med Supabase API details
+ */
+
 import { supabase } from "./supabaseClient.js";
 
 const msgEl = document.getElementById("authMsg");
@@ -21,8 +28,11 @@ function setLoading(isLoading) {
   if (btnSignup) btnSignup.textContent = isLoading ? "Skapar..." : "Skapa konto";
 }
 
+/**
+ * Säker profilrad i databasen
+ * @param {Object} user - Supabase auth user
+ */
 async function ensureProfile(user) {
-  // Skapar/uppdaterar profilen utan duplicate key
   const payload = {
     id: user.id,
     username: user.email?.split("@")[0] || "Användare",
@@ -33,7 +43,14 @@ async function ensureProfile(user) {
     .from("profiles")
     .upsert(payload, { onConflict: "id" });
 
-  if (error) throw error;
+  if (error) {
+    console.error("❌ ensureProfile error:", {
+      code: error.code,
+      message: error.message,
+      hint: error.hint,
+    });
+    throw error;
+  }
 }
 
 async function signUp() {
@@ -49,21 +66,38 @@ async function signUp() {
 
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase signUp error:", error.code, error.message);
+      return show("error", error.message || "Kunde inte skapa konto.");
+    }
 
     const user = data?.user;
 
     // Om email confirmation är ON kan session saknas, men user finns oftast.
     if (user) {
-      await ensureProfile(user);
-      window.location.href = "Profil.html";
-      return;
+      try {
+        await ensureProfile(user);
+        window.location.href = "Profil.html";
+        return;
+      } catch (e) {
+        console.warn("⚠️ Konto skapat men profil-insert failade:", {
+          code: e.code,
+          message: e.message,
+          hint: e.hint,
+        });
+        // Fallback: visa att konto är skapat men profil-upserting failade
+        show("error", 
+          "Konto skapat, men kunde inte uppdatera profil (RLS/DB issue). " +
+          "Logga in och försök igen på Profil-sidan."
+        );
+        return;
+      }
     }
 
     // Fallback om Supabase kräver bekräftelse och inte returnerar user
     show("success", "Konto skapat! Kolla din mail för att bekräfta, sen logga in.");
   } catch (err) {
-    console.error(err);
+    console.error("Unexpected signUp error:", err);
     show("error", err?.message || "Kunde inte skapa konto.");
   } finally {
     setLoading(false);
@@ -81,17 +115,37 @@ async function signIn() {
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase auth error:", error.code, error.message);
+      return show("error", error.message || "Kunde inte logga in.");
+    }
 
-    await ensureProfile(data.user);
+    // Login lyckades. Försök skapa profilrad, men låt INTE detta stoppa redirect.
+    // Detta är kritiskt för att undvika "fel lösenord"-meddelandet när profil-upserting failar.
+    if (data.user) {
+      try {
+        await ensureProfile(data.user);
+      } catch (e) {
+        console.warn("⚠️ Login OK men RLS/profil issue:", {
+          code: e.code,
+          message: e.message,
+          hint: e.hint,
+          details: e.details,
+        });
+        // Visar INTE fel för användaren; redirect sker nedan
+      }
+    }
+
+    // ✅ Inloggning lyckades - redirect nu
     window.location.href = "Profil.html";
   } catch (err) {
-    console.error(err);
-    show("error", "Fel email/lösenord.");
+    console.error("Unexpected auth error:", err);
+    show("error", err?.message || "Kunde inte logga in.");
   } finally {
     setLoading(false);
   }
 }
+
 
 // ===== Events =====
 btnLogin?.addEventListener("click", (e) => {
