@@ -279,10 +279,14 @@ input, button, textarea {
   }
 
   .icon-btn.is-active {
-    background: #f0f4ff;
-    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(59,130,246,0.08);
   }
-}
+
+  .icon-btn.is-active svg {
+    stroke: #3b82f6;
+    transform: scale(1.08);
+  }
+} /* <-- DEN HÄR saknas hos dig, stänger @media (max-width: 768px) */
 
 /* =========================
    REDUCED MOTION

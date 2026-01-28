@@ -10,44 +10,53 @@
 
 <body style="background-color: #F2F4F7;">
   <header class="site-header">
-    <div class="container">
-      <div class="left">
-        <div class="avatar" aria-hidden="true">
-          <img src="img/Eventslogg.png" alt="Profile">
+        <div class="container">
+            <div class="left">
+                <div class="avatar" aria-hidden="true">
+                    <img src="img/Eventslogg.png" alt="Profile">
+                </div>
+            </div>
+
+            <div class="center"></div>
+
+            <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="hamburger"></span>
+            </button>
+
+            <div class="right" role="navigation" aria-label="Primary">
+                <a href="Hem.html" class="icon-btn" title="Home" aria-label="Home">
+                   <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"/>
+                    </svg>
+                </a>
+
+                <a href="LaddaUp.html" class="icon-btn" title="Upload" aria-label="Upload">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M12 3v12"
+        stroke-linecap="round"/>
+  <path d="M7 8l5-5 5 5"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  <path d="M4 21h16"
+        stroke-linecap="round"/>
+</svg>
+
+                </a>
+
+                <a href="Profil.html" class="icon-btn" title="Account" aria-label="Account">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M20 21a8 8 0 0 0-16 0"
+        stroke-linecap="round"/>
+  <circle cx="12" cy="8" r="4"
+          stroke-linecap="round"/>
+</svg>
+
+                </a>
+            </div>
         </div>
-      </div>
-
-      <div class="center"></div>
-
-      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-        <span class="hamburger"></span>
-      </button>
-
-      <div class="right" role="navigation" aria-label="Primary">
-        <a href="Hem.html" class="icon-btn" title="Home" aria-label="Home">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M3 11.5L12 4l9 7.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 12v7a1 1 0 0 0 1 1h3v-5h8v5h3a1 1 0 0 0 1-1v-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-
-        <a href="LaddaUp.html" class="icon-btn" title="Upload" aria-label="Upload">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M12 16V6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 10l4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M21 20H3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-
-        <a href="Profil.html" class="icon-btn is-active" title="Account" aria-label="Account">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="12" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </header>
+    </header>
 
   <main class="profile-page">
     <section class="profile-card" aria-label="Profile">
