@@ -1,33 +1,27 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <link rel="stylesheet" href="Global.css">
-  <link rel="stylesheet" href="Profil.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="Global.css">
+  <link rel="stylesheet" href="Profil.css">
   <title>Profil</title>
 </head>
 
 <body class="page-profil">
-
-  <!-- ✅ SAME HEADER AS HEM -->
   <header class="site-header">
     <div class="container">
-
       <div class="left">
         <div class="avatar" aria-hidden="true">
           <img src="img/Eventslogg.png" alt="Profile">
         </div>
       </div>
 
-      <div class="center"></div>
-
-      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
         <span class="hamburger"></span>
       </button>
 
-      <div class="right" role="navigation" aria-label="Primary">
-
+      <div id="mobileNav" class="right" role="navigation" aria-label="Primary">
         <a href="Hem.html" class="icon-btn" title="Home" aria-label="Home">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
@@ -43,7 +37,6 @@
           </svg>
         </a>
 
-        <!-- ✅ ACTIVE PROFILE -->
         <a href="Profil.html" class="icon-btn is-active" title="Account" aria-label="Account">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round"/>
@@ -55,14 +48,9 @@
     </div>
   </header>
 
-
-  <!-- ✅ PROFILE CONTENT -->
   <main class="profil-main">
-
     <section class="profil-card">
-
       <div class="profil-top">
-
         <div class="profil-user">
           <div class="profil-avatar">LS</div>
 
@@ -75,23 +63,17 @@
         <a class="profil-btn" href="LaddaUp.html">
           + Ladda upp
         </a>
-
       </div>
-
       <div class="profil-about">
         <p class="profil-label">OM MIG</p>
 
         <textarea class="profil-box" rows="4"
           placeholder="Skriv något om dig själv..."></textarea>
       </div>
-
     </section>
-
     <h2 class="profil-section-title">Mina händelser</h2>
-
-    <!-- Här kan du senare lägga event-cards -->
-
   </main>
 
 </body>
+<script src="Main.js"></script>
 </html>

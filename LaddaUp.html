@@ -17,13 +17,11 @@
         </div>
       </div>
 
-      <div class="center"></div>
-
-      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+      <button class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
         <span class="hamburger"></span>
       </button>
 
-      <div class="right" role="navigation" aria-label="Primary">
+      <div id="mobileNav" class="right" role="navigation" aria-label="Primary">
         <a href="Hem.html" class="icon-btn" title="Home" aria-label="Home">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
@@ -93,29 +91,6 @@
     </section>
   </main>
 
-  <script>
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('.right');
-
-    menuToggle.addEventListener('click', () => {
-      const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
-      menuToggle.setAttribute('aria-expanded', !isExpanded);
-      navMenu.classList.toggle('active');
-    });
-
-    navMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        menuToggle.setAttribute('aria-expanded', 'false');
-        navMenu.classList.remove('active');
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.site-header')) {
-        menuToggle.setAttribute('aria-expanded', 'false');
-        navMenu.classList.remove('active');
-      }
-    });
-  </script>
+  <script src="Main.js"></script>
 </body>
 </html>
