@@ -1,111 +1,170 @@
-/* PAGE CENTERING */
-body {
+/* =========================
+   LaddaUp.css (Blue theme)
+   ========================= */
+
+.page-laddaup{
   margin: 0;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f2f2f2;
-  padding: 20px;
-  box-sizing: border-box;
+  background: #F2F4F7;
+  color: #1f2430;
 }
 
-/* MAIN CARD */
-.Laddaupcard {
-  width: min(950px, 95vw);
-  background: #d9d9d9;
-  border-radius: 12px;
-  padding: 40px;
-  box-sizing: border-box;
-  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+.page{
+  padding: 32px 16px 64px;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
-/* TITLE */
-.Laddaupcard h1 {
+/* ===== Hero ===== */
+.upload-hero{
   text-align: center;
-  margin-bottom: 35px;
-  font-size: clamp(22px, 2vw, 34px);
-  font-weight: 600;
+  padding: 18px 0 22px;
 }
 
-/* FORM GRID */
-.eventForm {
+.hero-icon{
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 18px;
+
+  background: #2FA8E0;
+  box-shadow: 0 14px 28px rgba(47, 168, 224, 0.28);
+
+  display: grid;
+  place-items: center;
+}
+
+.hero-icon .sparkle{
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.hero-title{
+  margin: 0;
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hero-subtitle{
+  margin: 8px auto 0;
+  max-width: 520px;
+  color: rgba(31,36,48,0.65);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+/* ===== Card ===== */
+.card{
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(16,24,40,0.08);
+  border: 1px solid rgba(16,24,40,0.06);
+}
+
+/* ===== Form layout ===== */
+.eventForm{
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 14px 16px;
 }
 
-/* FIELD BLOCK */
-.field {
+.field{
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+label{
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(31,36,48,0.85);
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-/* LABEL */
-label {
-  font-size: 14px;
-  font-weight: 500;
+.req{
+  color: #2FA8E0;
+  font-weight: 800;
 }
 
-/* INPUTS */
+/* ===== Inputs ===== */
 input,
-textarea {
+textarea{
   width: 100%;
-  border: none;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px 14px;
   font-size: 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(16,24,40,0.08);
+  background: #fbfbfc;
+
+  outline: none;
   box-sizing: border-box;
+
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
-/* TEXTAREA BIGGER */
-textarea {
+input::placeholder,
+textarea::placeholder{
+  color: rgba(31,36,48,0.45);
+}
+
+input:focus,
+textarea:focus{
+  background: #fff;
+  border-color: rgba(47, 168, 224, 0.55);
+  box-shadow: 0 0 0 4px rgba(47, 168, 224, 0.18);
+}
+
+textarea{
   min-height: 140px;
   resize: vertical;
 }
 
-/* INFORMATION FIELD FULL WIDTH */
-.full {
+.full{
   grid-column: span 2;
 }
 
-/* BUTTON CENTER */
-button {
-  grid-column: span 2;
-  justify-self: center;
+/* ===== Actions / Button ===== */
+.actions{
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+}
 
-  margin-top: 10px;
-  padding: 12px 30px;
+.primary{
+  padding: 12px 22px;
+  border-radius: 14px;
 
-  background: #0b57ff;
-  color: white;
-  border: none;
-  border-radius: 10px;
+  background: #2FA8E0;
+  color: #fff;
 
-  font-size: 15px;
-  font-weight: 600;
+  border: 1px solid rgba(0,0,0,0.06);
+  font-weight: 800;
   cursor: pointer;
 
-  transition: 0.2s;
+  box-shadow: 0 14px 28px rgba(47, 168, 224, 0.22);
+
+  transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
 }
 
-button:hover {
-  filter: brightness(1.1);
+.primary:hover{
+  transform: translateY(-1px);
+  filter: brightness(0.98);
 }
 
-/* ✅ MOBILE RESPONSIVE */
-@media (max-width: 650px) {
-  .eventForm {
-    grid-template-columns: 1fr;
-  }
+.primary:active{
+  transform: translateY(0);
+}
 
-  .full {
-    grid-column: span 1;
-  }
-
-  button {
-    grid-column: span 1;
-    width: 100%;
-  }
+/* ===== Mobile ===== */
+@media (max-width: 700px){
+  .card{ padding: 18px; }
+  .eventForm{ grid-template-columns: 1fr; }
+  .full{ grid-column: span 1; }
+  .actions{ justify-content: stretch; }
+  .primary{ width: 100%; }
 }

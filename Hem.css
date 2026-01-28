@@ -1,0 +1,118 @@
+/* ===== Page base ===== */
+.page-hem {
+  background: #F2F4F7;
+  color: #1f2430;
+}
+
+/* Om Global.css redan sätter container-bredd, kan du ta bort detta.
+   Annars hjälper det att få samma “luft” som bilden. */
+.hem-main {
+  padding: 28px 16px 64px;
+}
+
+.hero {
+  width: 100%;
+}
+
+.hero-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 56px 16px 24px;
+}
+
+/* ===== Pill / label ===== */
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #d4ebf7;
+  color: #2FA8E0;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(154, 93, 46, 0.18);
+}
+
+.hero-pill-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(154, 93, 46, 0.10);
+  font-size: 12px;
+}
+
+/* ===== Headline ===== */
+.hero-title {
+  margin: 18px 0 10px;
+  font-size: clamp(36px, 4.3vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.hero-title .accent {
+  color: #2FA8E0; /* Blue like screenshot */
+}
+
+/* ===== Subtitle ===== */
+.hero-subtitle {
+  margin: 0 auto;
+  max-width: 640px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(31, 36, 48, 0.70);
+}
+
+/* ===== CTA button ===== */
+.hero-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
+  border-radius: 12px;
+  background: #2FA8E0;
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(47, 168, 224, 0.25);
+  border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.hero-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+.hero-cta:active {
+  transform: translateY(0px);
+}
+
+/* ===== "active" state för Hem-knappen (om du vill matcha bilden) =====
+   Om din Global.css redan har styles för .icon-btn, detta blir bara extra. */
+
+/* ===== Small screens ===== */
+@media (max-width: 520px) {
+  .hero-inner {
+    padding-top: 42px;
+  }
+  .hero-pill {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+  .hero-cta {
+    width: 100%;
+    max-width: 320px;
+  }
+}

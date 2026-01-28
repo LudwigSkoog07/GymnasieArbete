@@ -1,148 +1,150 @@
-/* Page layout */
-.profile-page {
-  padding: 48px 16px;
+/* =========================
+   Profil.css (Matchar Hem Theme)
+   ========================= */
+
+.page-profil {
+  background: #F2F4F7;
+  color: #1f2430;
 }
 
-.profile-card {
-  width: min(860px, 92vw);
+.profil-main {
+  padding: 36px 16px 80px;
+  max-width: 980px;
   margin: 0 auto;
-  background: #D9D9D9;          /* matches the big grey block */
-  border-radius: 4px;
-  padding: 22px 26px;
+}
+
+/* ===== Profile Card ===== */
+.profil-card {
+  background: white;
+  border-radius: 18px;
+  padding: 26px;
+
+  border: 1px solid rgba(16,24,40,0.06);
+  box-shadow: 0 14px 40px rgba(16,24,40,0.08);
 }
 
 /* Top row */
-.profile-top {
+.profil-top {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-}
-
-.profile-left {
-  display: flex;
   align-items: flex-start;
-  gap: 14px;
-  min-width: 0;
+  gap: 18px;
 }
 
-.profile-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  background: #FFFFFF;          /* white circle avatar */
-  flex: 0 0 auto;
-}
-
-/* Name + edit icon */
-.profile-name {
-  min-width: 0;
-}
-
-.name-row {
+/* User left */
+.profil-user {
   display: flex;
+  gap: 16px;
   align-items: center;
-  gap: 8px;
 }
 
-.name {
+/* Avatar circle */
+.profil-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+
+  background: rgba(47, 168, 224, 0.16);
+  border: 1px solid rgba(47, 168, 224, 0.28);
+
+  display: grid;
+  place-items: center;
+
+  font-weight: 900;
+  font-size: 18px;
+  color: #2FA8E0;
+}
+
+/* Name + meta */
+.profil-name {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
-.edit-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
+.profil-meta {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: rgba(31, 36, 48, 0.65);
+}
+
+/* Button */
+.profil-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 0;
-}
 
-.edit-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
+  padding: 12px 16px;
+  border-radius: 14px;
 
-.edit-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: #111827;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+  background: #2FA8E0;
+  color: white;
 
-/* Upload button */
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #1D4ED8;          /* blue */
-  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 1;
-  white-space: nowrap;
+
+  box-shadow: 0 10px 24px rgba(47, 168, 224, 0.25);
+  border: 1px solid rgba(0,0,0,0.06);
+
+  transition: transform 120ms ease, filter 120ms ease;
 }
 
-.upload-btn:hover {
-  filter: brightness(0.95);
+.profil-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
 }
 
-/* Body */
-.profile-body {
-  margin-top: 14px;
+/* About section */
+.profil-about {
+  margin-top: 22px;
 }
 
-.info-label {
-  display: block;
+.profil-label {
   font-size: 12px;
-  color: #111827;
-  margin-bottom: 6px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(31, 36, 48, 0.55);
+  margin-bottom: 10px;
 }
 
-.info-box {
-  width: 320px;                 /* matches the small box on the left */
-  max-width: 100%;
-  background: #FFFFFF;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  resize: none;
-  outline: none;
+.profil-box {
+  width: 100%;
+  border-radius: 16px;
+  padding: 14px;
+
+  border: 1px solid rgba(16,24,40,0.08);
+  background: #fbfbfc;
 
   font-size: 14px;
-  line-height: 1.35;
-  color: #111827;
+  line-height: 1.6;
+  resize: none;
 
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+  outline: none;
 }
 
-/* Responsive: keep the same “left block + button right” feeling */
+.profil-box:focus {
+  background: white;
+  border-color: rgba(47, 168, 224, 0.55);
+  box-shadow: 0 0 0 4px rgba(47, 168, 224, 0.18);
+}
+
+/* Section title */
+.profil-section-title {
+  margin: 28px 0 12px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+/* Responsive */
 @media (max-width: 520px) {
-  .profile-top {
-    align-items: flex-start;
+  .profil-top {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .upload-btn {
-    padding: 9px 12px;
-    border-radius: 10px;
-  }
-
-  .info-box {
+  .profil-btn {
     width: 100%;
   }
 }
