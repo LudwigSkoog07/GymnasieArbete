@@ -1,105 +1,111 @@
+/* PAGE CENTERING */
 body {
-  min-height: 100vh;
   margin: 0;
+  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: #f3f5f7; /* optional */
-  padding: 24px;
+  align-items: center;
+  background: #f2f2f2;
+  padding: 20px;
   box-sizing: border-box;
 }
 
-/* CARD */
+/* MAIN CARD */
 .Laddaupcard {
-  width: min(980px, 92vw);
-  min-height: 520px;
-  background-color: #d9d9d9;
-  border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
-  padding: 36px 48px;
+  width: min(950px, 95vw);
+  background: #d9d9d9;
+  border-radius: 12px;
+  padding: 40px;
   box-sizing: border-box;
-  position: relative;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.cardTitle {
-  margin: 0 0 28px 0;
+/* TITLE */
+.Laddaupcard h1 {
   text-align: center;
-  font-size: clamp(22px, 2.2vw, 34px);
+  margin-bottom: 35px;
+  font-size: clamp(22px, 2vw, 34px);
   font-weight: 600;
-  color: #111;
 }
 
-/* FORM LAYOUT */
+/* FORM GRID */
 .eventForm {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  max-width: 360px; /* keep the fields on the left like your mock */
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
 
+/* FIELD BLOCK */
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.label {
+/* LABEL */
+label {
   font-size: 14px;
-  color: #2a2a2a;
+  font-weight: 500;
 }
 
-.input,
-.textarea {
+/* INPUTS */
+input,
+textarea {
   width: 100%;
   border: none;
-  outline: none;
-  background: #ffffff;
+  padding: 10px;
   border-radius: 6px;
-  padding: 10px 12px;
+  font-size: 14px;
   box-sizing: border-box;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
 }
 
-.textarea {
-  resize: vertical;
+/* TEXTAREA BIGGER */
+textarea {
   min-height: 140px;
+  resize: vertical;
 }
 
-/* BUTTON */
-.submitBtn {
-  margin-top: 18px;
-  align-self: center;
-  border: none;
-  cursor: pointer;
+/* INFORMATION FIELD FULL WIDTH */
+.full {
+  grid-column: span 2;
+}
+
+/* BUTTON CENTER */
+button {
+  grid-column: span 2;
+  justify-self: center;
+
+  margin-top: 10px;
+  padding: 12px 30px;
 
   background: #0b57ff;
-  color: #fff;
-  font-weight: 600;
-
-  padding: 12px 26px;
+  color: white;
+  border: none;
   border-radius: 10px;
 
-  box-shadow: 0 10px 18px rgba(11, 87, 255, 0.25);
-  transition: transform 120ms ease, filter 120ms ease;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: 0.2s;
 }
 
-.submitBtn:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
+button:hover {
+  filter: brightness(1.1);
 }
 
-.submitBtn:active {
-  transform: translateY(0px);
-}
-
-/* MOBILE */
-@media (max-width: 520px) {
-  .Laddaupcard {
-    padding: 24px 18px;
-    min-height: auto;
+/* ✅ MOBILE RESPONSIVE */
+@media (max-width: 650px) {
+  .eventForm {
+    grid-template-columns: 1fr;
   }
 
-  .eventForm {
-    max-width: 100%;
+  .full {
+    grid-column: span 1;
+  }
+
+  button {
+    grid-column: span 1;
+    width: 100%;
   }
 }

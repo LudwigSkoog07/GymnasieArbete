@@ -3,36 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="Global.css" />
   <link rel="stylesheet" href="LaddaUp.css" />
   <title>Ladda upp</title>
 </head>
+
 <body>
   <div class="Laddaupcard">
-    <h1 class="cardTitle">Ladda upp händelse</h1>
+
+    <h1>Ladda upp händelse</h1>
 
     <form class="eventForm">
-      <label class="field">
-        <span class="label">Titel</span>
-        <input class="input" type="text" name="title" placeholder="" />
-      </label>
 
-      <label class="field">
-        <span class="label">Plats</span>
-        <input class="input" type="text" name="place" placeholder="" />
-      </label>
+      <div class="field">
+        <label>Titel</label>
+        <input type="text" placeholder="" />
+      </div>
 
-      <label class="field">
-        <span class="label">När</span>
-        <input class="input" type="datetime-local" name="when" />
-      </label>
+      <div class="field">
+        <label>Plats</label>
+        <input type="text" placeholder="" />
+      </div>
 
-      <label class="field field--wide">
-        <span class="label">Information</span>
-        <textarea class="textarea" name="info" rows="6" placeholder=""></textarea>
-      </label>
+      <div class="field">
+        <label>När</label>
+        <input type="text" placeholder="" />
+      </div>
 
-      <button class="submitBtn" type="submit">Ladda upp +</button>
+      <div class="field full">
+        <label>Information</label>
+        <textarea placeholder=""></textarea>
+      </div>
+
+      <button type="submit">Ladda upp +</button>
+
     </form>
   </div>
 </body>
