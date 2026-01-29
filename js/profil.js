@@ -214,14 +214,28 @@ function renderCard(ev) {
     ev.end_time ? ` ⏳ ${ev.end_time === "sent" ? "Sent" : fmtTime(ev.end_time)}` : "";
 
   return `
-    <article class="my-card">
+    <article class="my-card" data-event-id="${ev.id}">
       <div class="my-top">
         <div class="my-img">
           ${first ? `<img src="${first}" alt="Event bild" loading="lazy">` : `<div class="my-img-empty"></div>`}
         </div>
 
         <div class="my-text">
-          <h3 class="my-title">${ev.title || ""}</h3>
+          <div class="my-title-row">
+            <h3 class="my-title">${ev.title || ""}</h3>
+
+            <button
+              class="my-del"
+              type="button"
+              data-action="delete-event"
+              data-id="${ev.id}"
+              aria-label="Ta bort händelse"
+              title="Ta bort"
+            >
+              Ta bort
+            </button>
+          </div>
+
           <p class="my-meta">📍 ${ev.place || ""} • 📅 ${ev.date || ""} ${timeText}${endText}</p>
         </div>
       </div>
@@ -230,6 +244,7 @@ function renderCard(ev) {
     </article>
   `;
 }
+
 
 async function loadMyEvents(user) {
   if (metaEl) metaEl.textContent = "Laddar händelser...";
@@ -260,6 +275,58 @@ async function loadMyEvents(user) {
   if (myEmptyEl) myEmptyEl.style.display = "none";
   myEventsEl.innerHTML = list.map(renderCard).join("");
 }
+
+async function deleteMyEvent(user, eventId) {
+  // Viktigt: matcha både id och user_id så du inte kan radera andras
+  const { error } = await supabase
+    .from("events")
+    .delete()
+    .eq("id", eventId)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+}
+
+function attachMyEventsHandlers(user) {
+  if (!myEventsEl) return;
+
+  myEventsEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest('[data-action="delete-event"]');
+    if (!btn) return;
+
+    const eventId = btn.getAttribute("data-id");
+    if (!eventId) return;
+
+    const ok = confirm("Vill du ta bort den här händelsen? Detta går inte att ångra.");
+    if (!ok) return;
+
+    // UI: lås knappen direkt
+    btn.disabled = true;
+    btn.textContent = "Tar bort...";
+
+    try {
+      await deleteMyEvent(user, eventId);
+
+      // Ta bort från DOM
+      const card = myEventsEl.querySelector(`.my-card[data-event-id="${eventId}"]`);
+      card?.remove();
+
+      // Uppdatera meta-räknare + empty state
+      const remaining = myEventsEl.querySelectorAll(".my-card").length;
+      if (metaEl) metaEl.textContent = `${remaining} publicerade händelser`;
+
+      if (remaining === 0) {
+        if (myEmptyEl) myEmptyEl.style.display = "block";
+      }
+    } catch (err) {
+      console.error("❌ delete event failed:", err);
+      alert("Kunde inte ta bort händelsen. Kolla RLS/policies.");
+      btn.disabled = false;
+      btn.textContent = "Ta bort";
+    }
+  });
+}
+
 
 /* =========================
    Pending username sync
@@ -341,6 +408,8 @@ async function main() {
     if (!isEditing) return;
     lsSet(KEY_DRAFT(user.id), nameInput.value || "");
   });
+
+  attachMyEventsHandlers(user);
 
   cancelNameBtn?.addEventListener("click", () => {
     isEditing = false;
