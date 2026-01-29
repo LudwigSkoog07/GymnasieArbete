@@ -232,6 +232,12 @@ async function uploadImages(files, userId) {
 /* =========================
    Init + Submit
 ========================= */
+// /js/laddaupp.js
+import { supabase } from "./supabaseClient.js";
+import { requireLogin } from "./guard.js";
+
+/* ... allt oförändrat ovan ... */
+
 (async function init() {
   const session = await requireLogin();
   const user = session.user;
@@ -243,7 +249,8 @@ async function uploadImages(files, userId) {
     const fresh = await supabase.auth.getSession();
     const freshUser = fresh?.data?.session?.user;
     if (!freshUser) {
-      window.location.href = "Auth.html";
+      // ✅ HTML ligger i /html/
+      window.location.href = "/html/Auth.html";
       return;
     }
 
@@ -257,13 +264,13 @@ async function uploadImages(files, userId) {
       // 1) Upload images
       const imageUrls = await uploadImages(v.files, freshUser.id);
 
-      // 2) Insert event (MATCHAR DIN DB: user_id + image_urls)
+      // 2) Insert event
       const payload = {
         title: v.title,
         place: v.place,
-        date: v.date,             // DB = date (date-typ i din screenshot)
-        time: v.startTime,        // DB = time (time without time zone)
-        end_time: v.endTime,      // DB = end_time (text)
+        date: v.date,
+        time: v.startTime,
+        end_time: v.endTime,
         info: v.info,
         user_id: freshUser.id,
         image_urls: imageUrls.length ? imageUrls : null
@@ -282,7 +289,8 @@ async function uploadImages(files, userId) {
       if (endLateEl) endLateEl.checked = false;
       setEndMode();
 
-      setTimeout(() => (window.location.href = "Hem.html"), 650);
+      // ✅ Hem är index.html i root
+      setTimeout(() => (window.location.href = "../index.html"), 650);
 
     } catch (err) {
       console.error("Upload failed:", err);
