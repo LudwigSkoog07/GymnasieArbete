@@ -1,1 +1,61 @@
-# Planering
+Planering – Gymnasiearbete
+Projekt: HöganäsEvents.se
+1. Bakgrund
+
+I Höganäs finns många lokala evenemang, men informationen om dem är ofta utspridd på olika sociala medier, affischer eller hemsidor. Det gör det svårt för invånare att snabbt hitta vad som händer i kommunen.
+
+Därför vill jag skapa en webbplattform som samlar lokala events på ett ställe. Målet är att göra det enklare för människor att upptäcka aktiviteter och evenemang i området.
+
+2. Syfte
+
+Syftet med gymnasiearbetet är att utveckla en fungerande och användarvänlig hemsida där man kan:
+
+se kommande evenemang i Höganäs
+
+skapa ett konto och logga in
+
+ladda upp egna events
+
+ha en profil där man kan se sina uppladdade events
+
+Projektet ska visa mina kunskaper inom webbutveckling och databashantering.
+
+3. Mål
+
+Målet är att skapa en komplett webbsida med dessa funktioner:
+
+✅ Startsida med eventlista
+✅ Eventdetaljsida
+✅ Inloggning och registrering
+✅ Profil med användarinfo
+✅ Uppladdning av event via formulär
+✅ Databas för att spara events och användare
+✅ Responsiv design för mobil och dator
+
+4. Avgränsningar
+
+För att projektet ska vara rimligt inom tidsramen begränsas det till:
+
+Endast event i Höganäs kommun
+
+Fokus på grundfunktioner, inte avancerade betalningar eller biljetter
+
+Admin-system prioriteras inte i första versionen
+
+Enkel men professionell design
+
+5. Metod och verktyg
+
+Projektet genomförs genom praktisk webbutveckling.
+
+Tekniker och verktyg:
+
+HTML, CSS och JavaScript
+
+Supabase (databas + autentisering)
+
+GitHub för versionshantering
+
+Visual Studio Code som utvecklingsmiljö
+
+Arbetet görs iterativt, vilket betyder att jag utvecklar sidan steg för steg och förbättrar funktioner efter testning.
