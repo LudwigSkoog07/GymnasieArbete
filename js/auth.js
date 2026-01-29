@@ -1,7 +1,7 @@
 /**
  * Authentication sida: Logga in eller skapa konto
- * - Hantera signUp med profile-creation
- * - Hantera signIn med error-recovery
+ * - Email confirmation krävs (ingen auto-redirect efter signUp)
+ * - Blockera signIn om email inte är verifierad
  * - Robust error handling med Supabase API details
  */
 
@@ -26,6 +26,13 @@ function setLoading(isLoading) {
 
   if (btnLogin) btnLogin.textContent = isLoading ? "Loggar in..." : "Logga in";
   if (btnSignup) btnSignup.textContent = isLoading ? "Skapar..." : "Skapa konto";
+}
+
+/**
+ * True om användaren har verifierat email
+ */
+function isEmailConfirmed(user) {
+  return !!(user?.email_confirmed_at || user?.confirmed_at);
 }
 
 /**
@@ -65,7 +72,17 @@ async function signUp() {
   show("success", "Skapar konto...");
 
   try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    // Viktigt: signUp ska INTE logga in användaren direkt när email-confirmation är på.
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      // Valfritt men rekommenderat: lägg till redirect för confirm-länken
+      // OBS: måste vara tillåten i Supabase Auth Redirect URLs
+      options: {
+        emailRedirectTo: `${window.location.origin}/html/confirm.html`,
+      },
+    });
+
     if (error) {
       console.error("Supabase signUp error:", error.code, error.message);
       return show("error", error.message || "Kunde inte skapa konto.");
@@ -73,29 +90,25 @@ async function signUp() {
 
     const user = data?.user;
 
-    // Om email confirmation är ON kan session saknas, men user finns oftast.
+    // Skapa profilrad kan du göra här (det är OK), MEN redirecta inte till Profil.
     if (user) {
       try {
         await ensureProfile(user);
-        window.location.href = "Profil.html";
-        return;
       } catch (e) {
         console.warn("⚠️ Konto skapat men profil-insert failade:", {
           code: e.code,
           message: e.message,
           hint: e.hint,
         });
-        // Fallback: visa att konto är skapat men profil-upserting failade
-        show("error", 
-          "Konto skapat, men kunde inte uppdatera profil (RLS/DB issue). " +
-          "Logga in och försök igen på Profil-sidan."
-        );
-        return;
+        // vi fortsätter ändå – kontot är skapat
       }
     }
 
-    // Fallback om Supabase kräver bekräftelse och inte returnerar user
-    show("success", "Konto skapat! Kolla din mail för att bekräfta, sen logga in.");
+    // ✅ Nytt: alltid instruktion istället för redirect
+    show(
+      "success",
+      "Konto skapat! Kolla din email och bekräfta länken. När det är klart kan du logga in."
+    );
   } catch (err) {
     console.error("Unexpected signUp error:", err);
     show("error", err?.message || "Kunde inte skapa konto.");
@@ -120,11 +133,18 @@ async function signIn() {
       return show("error", error.message || "Kunde inte logga in.");
     }
 
-    // Login lyckades. Försök skapa profilrad, men låt INTE detta stoppa redirect.
-    // Detta är kritiskt för att undvika "fel lösenord"-meddelandet när profil-upserting failar.
-    if (data.user) {
+    const user = data?.user;
+
+    // ✅ Nytt: blockera om email inte verifierad
+    if (!isEmailConfirmed(user)) {
+      await supabase.auth.signOut();
+      return show("error", "Bekräfta din email först (kolla även skräppost), sen logga in igen.");
+    }
+
+    // Login lyckades. Försök skapa profilrad (men stoppa inte redirect om den failar)
+    if (user) {
       try {
-        await ensureProfile(data.user);
+        await ensureProfile(user);
       } catch (e) {
         console.warn("⚠️ Login OK men RLS/profil issue:", {
           code: e.code,
@@ -132,11 +152,9 @@ async function signIn() {
           hint: e.hint,
           details: e.details,
         });
-        // Visar INTE fel för användaren; redirect sker nedan
       }
     }
 
-    // ✅ Inloggning lyckades - redirect nu
     window.location.href = "Profil.html";
   } catch (err) {
     console.error("Unexpected auth error:", err);
@@ -145,7 +163,6 @@ async function signIn() {
     setLoading(false);
   }
 }
-
 
 // ===== Events =====
 btnLogin?.addEventListener("click", (e) => {
@@ -158,7 +175,6 @@ btnSignup?.addEventListener("click", (e) => {
   signUp();
 });
 
-// Enter på password => logga in
 passEl?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -166,8 +182,19 @@ passEl?.addEventListener("keydown", (e) => {
   }
 });
 
-// Om redan inloggad, skicka direkt till profil
+// ✅ Ändra: Om redan inloggad -> bara redirect om email är verifierad
 (async function redirectIfLoggedIn() {
   const { data } = await supabase.auth.getSession();
-  if (data?.session) window.location.href = "Profil.html";
+  const session = data?.session;
+
+  if (!session?.user) return;
+
+  if (!isEmailConfirmed(session.user)) {
+    // om någon sitter “halv-inloggad” utan confirm, logga ut och låt dem stanna
+    await supabase.auth.signOut();
+    show("error", "Du måste bekräfta din email innan du kan fortsätta.");
+    return;
+  }
+
+  window.location.href = "Profil.html";
 })();

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bekräftar konto…</title>
+  <link rel="stylesheet" href="../css/Global.css">
+  <style>
+    .wrap{max-width:720px;margin:0 auto;padding:40px 16px}
+    .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+    .muted{opacity:.75}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Bekräftar konto…</h1>
+      <p id="msg" class="muted">Vänta lite.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "../js/supabaseClient.js";
+
+const msg = document.getElementById("msg");
+
+async function run() {
+  try {
+    const url = new URL(window.location.href);
+
+    // 1. Försök ta code (nya systemet)
+    const code = url.searchParams.get("code");
+
+    if (code) {
+      await supabase.auth.exchangeCodeForSession(code);
+      msg.textContent = "Klart! Konto bekräftat. Skickar vidare…";
+      window.location.href = "Auth.html";
+      return;
+    }
+
+    // 2. Försök ta access_token från hash (#)
+    const hash = new URLSearchParams(window.location.hash.substring(1));
+    const access_token = hash.get("access_token");
+    const refresh_token = hash.get("refresh_token");
+
+    if (access_token && refresh_token) {
+      await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
+      msg.textContent = "Klart! Konto bekräftat. Skickar vidare…";
+      window.location.href = "Auth.html";
+      return;
+    }
+
+    // 3. Om inget hittas
+    msg.textContent = "Saknar bekräftelsekod. Öppna länken från mailet igen.";
+  } catch (e) {
+    console.error(e);
+    msg.textContent = "Fel vid bekräftelse. Försök igen.";
+  }
+}
+
+run();
+  </script>
+</body>
+</html>
