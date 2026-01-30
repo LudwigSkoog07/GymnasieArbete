@@ -12,6 +12,7 @@ const countEl = document.getElementById("eventsCount");
    State
 ========================= */
 let currentUserId = null;
+let isCurrentUserAdmin = false;
 
 /* =========================
    Helpers (svenska)
@@ -114,7 +115,21 @@ function eventEndAsDate(ev) {
 async function loadCurrentUser() {
   const { data } = await supabase.auth.getUser();
   currentUserId = data?.user?.id || null;
-}
+  isCurrentUserAdmin = false;
+
+  if (currentUserId) {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', currentUserId)
+        .single();
+      if (!error && profile) isCurrentUserAdmin = !!profile.is_admin;
+    } catch (e) {
+      console.warn('⚠️ Kunde inte hämta is_admin:', e?.message || e);
+    }
+  }
+} 
 
 /* =========================
    Attendees
@@ -234,6 +249,178 @@ function closeAttendeesModal() {
 }
 
 /* =========================
+   Admin panel (modal + loader)
+========================= */
+function ensureAdminModal() {
+  if (document.getElementById("adminModal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "adminModal";
+  modal.hidden = true;
+
+  modal.innerHTML = `
+    <div class="att-modal-backdrop" data-close="1"></div>
+    <div class="att-modal" role="dialog" aria-modal="true" aria-label="Adminpanel">
+      <div class="att-modal-top">
+        <div class="att-modal-title">Adminpanel</div>
+        <button class="att-modal-close" data-close="1" aria-label="Stäng">✕</button>
+      </div>
+      <div class="att-modal-body" id="adminModalBody">Laddar...</div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.addEventListener("click", async (e) => {
+    const action = e.target?.dataset?.action;
+    const tab = e.target?.dataset?.tab;
+
+    if (action === "copy-uid") {
+      try {
+        await navigator.clipboard.writeText(currentUserId || "");
+        alert("UID kopierat till urklipp");
+      } catch (err) {
+        alert("Kunde inte kopiera UID");
+      }
+      return;
+    }
+
+    if (action === "refresh-admin") {
+      await loadAdminPanel();
+      return;
+    }
+
+    if (action === "admin-delete-event") {
+      const id = e.target?.dataset?.id;
+      if (!id) return;
+      if (!confirm('Vill du verkligen ta bort denna händelse?')) return;
+      try {
+        const { error } = await supabase.from("events").delete().eq("id", id);
+        if (error) { alert("Kunde inte ta bort: " + (error.message || error)); return; }
+        await loadAdminPanel();
+      } catch (err) {
+        alert("Kunde inte ta bort: " + (err?.message || err));
+      }
+      return;
+    }
+
+    if (action === "admin-toggle-admin") {
+      const id = e.target?.dataset?.id;
+      const isAdmin = e.target?.dataset?.isAdmin === "true";
+      if (!id) return;
+      if (!confirm((isAdmin ? 'Ta bort admin-rättigheter för ' : 'Ge admin-rättigheter till ') + id + '?')) return;
+      try {
+        const { error } = await supabase.from('profiles').update({ is_admin: !isAdmin }).eq('id', id);
+        if (error) { alert('Kunde inte uppdatera: ' + (error.message || error)); return; }
+        await loadAdminPanel();
+      } catch (err) {
+        alert('Kunde inte uppdatera: ' + (err?.message || err));
+      }
+      return;
+    }
+
+    if (tab) {
+      const body = document.getElementById('adminModalBody');
+      if (!body) return;
+      body.querySelectorAll('[data-admin-tab]').forEach(el => el.hidden = el.dataset.adminTab !== tab);
+      body.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('is-on', b.dataset.tab === tab));
+      return;
+    }
+
+    if (e.target?.dataset?.close) closeAdminModal();
+  });
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdminModal(); });
+}
+
+function openAdminModal(html) {
+  ensureAdminModal();
+  const modal = document.getElementById('adminModal');
+  const body = document.getElementById('adminModalBody');
+  body.innerHTML = html;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAdminModal() {
+  const modal = document.getElementById('adminModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+async function loadAdminPanel() {
+  openAdminModal('<p>Laddar admin-panel...</p>');
+
+  try {
+    const evRes = await loadEventsWithJoin();
+    const profilesRes = await supabase.from('profiles').select('id, username, full_name, is_admin').order('username');
+
+    const events = evRes.error ? (await loadEventsNoJoin()).data || [] : evRes.data || [];
+    const profiles = profilesRes.error ? [] : profilesRes.data || [];
+
+    const eventsHtml = events.map(ev => {
+      const author = authorNameFromProfile(ev.profiles, 'Användare');
+      return `<li class="admin-event" style="padding:8px;border-bottom:1px solid #eee;">
+        <strong>${ev.title || '(utan titel)'}</strong> — ${author} — ${fmtDateSv(ev.date)} 
+        <button data-action="admin-delete-event" data-id="${ev.id}" style="margin-left:8px;">🗑️ Ta bort</button>
+      </li>`;
+    }).join('');
+
+    const usersHtml = profiles.map(p => {
+      return `<li class="admin-user" style="padding:8px;border-bottom:1px solid #eee;">
+        <strong>${p.username || p.id}</strong> ${p.full_name ? '- ' + p.full_name : ''} 
+        <span style="margin-left:8px;">${p.is_admin ? '🔒 Admin' : ''}</span>
+        <button data-action="admin-toggle-admin" data-id="${p.id}" data-is-admin="${p.is_admin}" style="margin-left:8px;">${p.is_admin ? 'Ta bort admin' : 'Gör admin'}</button>
+      </li>`;
+    }).join('');
+
+    const html = `
+      <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>Min uid: <code id="adminUid">${currentUserId || ''}</code> <button data-action="copy-uid">Kopiera</button></div>
+        <div><button data-action="refresh-admin">Uppdatera</button></div>
+      </div>
+      <div class="admin-tabs" style="margin-bottom:12px;">
+        <button class="admin-tab-btn is-on" data-tab="events">Events</button>
+        <button class="admin-tab-btn" data-tab="users">Användare</button>
+      </div>
+      <div data-admin-tab="events">
+        <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga events</li>'}</ul>
+      </div>
+      <div data-admin-tab="users" hidden>
+        <ul style="list-style:none;padding:0;margin:0;">${usersHtml || '<li>Inga användare</li>'}</ul>
+      </div>
+    `;
+
+    openAdminModal(html);
+  } catch (err) {
+    openAdminModal('<p>Kunde inte ladda admin-panelen.</p>');
+    console.warn('⚠️ Admin panel load failed:', err?.message || err);
+  }
+}
+
+function ensureAdminToggle() {
+  if (!isCurrentUserAdmin) return;
+  if (document.getElementById('adminToggle')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'adminToggle';
+  btn.textContent = 'Admin';
+  btn.title = 'Öppna adminpanel';
+  btn.style.position = 'fixed';
+  btn.style.right = '12px';
+  btn.style.bottom = '12px';
+  btn.style.zIndex = 1000;
+  btn.style.padding = '8px 10px';
+  btn.style.borderRadius = '6px';
+  btn.style.background = '#d00';
+  btn.style.color = '#fff';
+  btn.style.border = 'none';
+  btn.addEventListener('click', () => { loadAdminPanel(); });
+  document.body.appendChild(btn);
+}
+
+/* =========================
    Data: Events + profiles join/fallback
 ========================= */
 async function loadEventsWithJoin() {
@@ -287,6 +474,8 @@ function renderEvent(ev) {
     ? `⏳ ${endResolved === "sent" ? "Sent" : (endResolved ? fmtTime(endResolved) : "")}`
     : "";
 
+  const canDelete = isCurrentUserAdmin || (currentUserId && currentUserId === ev.user_id);
+
   const attCount = ev.att_count || 0;
   const iAmComing = !!ev.i_am_coming;
 
@@ -307,6 +496,7 @@ function renderEvent(ev) {
             <div class="event-author">${authorName}</div>
             <div class="event-timeago">${timeAgo(ev.created_at)}</div>
           </div>
+          ${canDelete ? `<div class="event-actions"><button class="event-delete" data-action="delete-event" type="button" title="Ta bort händelse">🗑️</button></div>` : ""}
         </div>
 
         <h3 class="event-name">${ev.title || ""}</h3>
@@ -414,6 +604,19 @@ async function loadEvents() {
     for (const e of list) e.profiles = profilesMap.get(e.user_id) || null;
   } else {
     list = res.data || [];
+
+    // Ibland (p.g.a. RLS eller join-begränsningar) kan `profiles` vara null
+    // även om `user_id` finns. Hämta saknade profiles separat som fallback.
+    const missingUserIds = [...new Set((list || [])
+      .filter((e) => !e.profiles && e.user_id)
+      .map((e) => e.user_id))];
+
+    if (missingUserIds.length) {
+      const profilesMap = await loadProfilesForUserIds(missingUserIds);
+      for (const e of list) {
+        if (!e.profiles && e.user_id) e.profiles = profilesMap.get(e.user_id) || null;
+      }
+    }
   }
 
   // 3) filtrera bort passerade
@@ -491,7 +694,26 @@ function wireEvents() {
       return;
     }
 
-    // 📋 Visa lista
+    // �️ Ta bort event (endast ägare eller admin får lyckas på serversidan via RLS)
+    if (action === "delete-event") {
+      if (!confirm('Vill du verkligen ta bort denna händelse?')) return;
+      try {
+        const { error } = await supabase.from("events").delete().eq("id", eventId);
+        if (error) {
+          alert("Kunde inte ta bort: " + (error.message || error));
+          return;
+        }
+        // ta bort från UI
+        card.remove();
+        const remaining = document.querySelectorAll('.event-card').length;
+        countEl.textContent = `${remaining} händelser`;
+      } catch (err) {
+        alert("Kunde inte ta bort: " + (err?.message || err));
+      }
+      return;
+    }
+
+    // �📋 Visa lista
     if (action === "show-attendees") {
       try {
         openAttendeesModal(`<p>Laddar deltagare...</p>`);
@@ -522,6 +744,7 @@ function wireEvents() {
 (async () => {
   await loadCurrentUser();
   ensureAttendeesModal();
+  ensureAdminToggle();
   wireEvents();
   loadEvents();
 })();

@@ -261,7 +261,17 @@ async function uploadImages(files, userId) {
       // 1) Upload images
       const imageUrls = await uploadImages(v.files, freshUser.id);
 
-      // 2) Insert event (matchar din DB)
+      // 2) Ensure profile row exists so uploader name is available to feeds
+      try {
+        const username = freshUser.email?.split("@")[0] || "User";
+        await supabase
+          .from("profiles")
+          .upsert({ id: freshUser.id, username }, { onConflict: "id" });
+      } catch (e) {
+        console.warn("⚠️ Kunde inte upserta profile:", e?.message || e);
+      }
+
+      // 3) Insert event (matchar din DB)
       const payload = {
         title: v.title,
         place: v.place,
@@ -274,22 +284,22 @@ async function uploadImages(files, userId) {
       };
 
       const { data: inserted, error } = await supabase
-    .from("events")
-    .insert([payload])
-    .select("id")
-    .single();
+        .from("events")
+        .insert([payload])
+        .select("id")
+        .single();
 
-  if (error) throw error;
+      if (error) throw error;
 
-  const { error: attendErr } = await supabase
-  .from("event_attendees")
-  .insert([{ event_id: eventId, user_id: freshUser.id }]);
+      const eventId = inserted.id;
 
-// om den redan finns av någon anledning, ignorera
-if (attendErr) console.warn("Kunde inte auto-anmäla skaparen:", attendErr.message);
+      // 4) Auto-attend creator (lägg efter vi har eventId)
+      const { error: attendErr } = await supabase
+        .from("event_attendees")
+        .insert([{ event_id: eventId, user_id: freshUser.id }]);
 
-
-  const eventId = inserted.id;
+      // om den redan finns av någon anledning, ignorera
+      if (attendErr) console.warn("Kunde inte auto-anmäla skaparen:", attendErr.message);
 
 
       showMsg("success", "✅ Händelsen är uppladdad!");
