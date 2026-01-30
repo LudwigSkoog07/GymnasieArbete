@@ -497,3 +497,218 @@
   font-weight: 850;
   color: rgba(24,119,242,0.85);
 }
+
+/* =========================
+   Deltagare ("kommer") på eventkort
+========================= */
+.event-attend{
+  margin-top: 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   Tydlig kommer/inte kommer
+========================= */
+
+.event-attend{
+  margin-top: 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.attend-left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Bas-knapp */
+.attend-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+
+  border: 1px solid transparent;
+  transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
+              filter 160ms ease,
+              background 160ms ease,
+              border-color 160ms ease;
+}
+
+.attend-btn:hover{ transform: translateY(-2px); }
+.attend-btn:active{ transform: translateY(0); }
+
+/* INTE anmäld = blå */
+.attend-btn.is-off{
+  background: #1877f2;
+  color: #fff;
+  border-color: rgba(24,119,242,0.30);
+  box-shadow: 0 14px 26px rgba(24,119,242,0.22);
+}
+
+/* ANMÄLD = röd */
+.attend-btn.is-on{
+  background: #ef4444;
+  color: #fff;
+  border-color: rgba(239,68,68,0.35);
+  box-shadow: 0 14px 26px rgba(239,68,68,0.18);
+}
+
+/* Status pill */
+.attend-status{
+  font-size: 13px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15,23,42,0.08);
+  background: rgba(15,23,42,0.04);
+}
+
+.attend-status.is-off{
+  color: rgba(15,23,42,0.70);
+}
+
+.attend-status.is-on{
+  color: rgba(239,68,68,0.95);
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.18);
+}
+
+
+.attend-meta{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 850;
+  color: rgba(15,23,42,0.65);
+}
+
+.attend-list{
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 4px;
+  font-weight: 900;
+  color: rgba(24,119,242,0.92);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.attend-list:hover{
+  filter: brightness(0.95);
+}
+
+/* =========================
+   Modal: deltagarlista
+========================= */
+#attendeesModal[hidden]{ display:none; }
+
+.att-modal-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2000;
+}
+
+.att-modal{
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100% - 24px));
+
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(15,23,42,0.10);
+  border-radius: 20px;
+
+  box-shadow: 0 26px 78px rgba(15,23,42,0.28);
+
+  z-index: 2001;
+  overflow: hidden;
+
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+.att-modal-top{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15,23,42,0.08);
+}
+
+.att-modal-title{
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.att-modal-close{
+  border: none;
+  background: rgba(15,23,42,0.05);
+  border: 1px solid rgba(15,23,42,0.08);
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.att-modal-close:hover{
+  background: rgba(15,23,42,0.08);
+}
+
+.att-modal-body{
+  padding: 14px;
+}
+
+.att-list{
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  display:grid;
+  gap: 8px;
+}
+
+.att-item{
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(15,23,42,0.05);
+  border: 1px solid rgba(15,23,42,0.06);
+
+  font-weight: 800;
+  color: rgba(15,23,42,0.85);
+}
+
+/* Mobile: stacka snyggt */
+@media (max-width: 520px){
+  .event-attend{ justify-content: flex-start; }
+}
+
+.attend-btn:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}

@@ -125,7 +125,7 @@ function renderPreviews() {
     const item = document.createElement("div");
     item.className = "img-item";
     item.innerHTML = `
-      <img src="${url}" alt="Preview" loading="lazy">
+      <img src="${url}" alt="Förhandsvisning" loading="lazy">
       <button type="button" class="img-remove" aria-label="Ta bort bild">✕</button>
     `;
 
@@ -198,7 +198,6 @@ function validate() {
 
 /* =========================
    Storage upload helpers
-   Path = events/{uid}/...
 ========================= */
 function safePath(file, userId) {
   const extRaw = (file.name?.split(".").pop() || "jpg").toLowerCase();
@@ -232,24 +231,22 @@ async function uploadImages(files, userId) {
 /* =========================
    Init + Submit
 ========================= */
-// /js/laddaupp.js
-import { supabase } from "./supabaseClient.js";
-import { requireLogin } from "./guard.js";
-
-/* ... allt oförändrat ovan ... */
-
 (async function init() {
   const session = await requireLogin();
-  const user = session.user;
+  const user = session?.user;
+
+  if (!user) {
+    window.location.href = "/html/Auth.html";
+    return;
+  }
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // verify session still exists
+    // extra safety: session kan dö
     const fresh = await supabase.auth.getSession();
     const freshUser = fresh?.data?.session?.user;
     if (!freshUser) {
-      // ✅ HTML ligger i /html/
       window.location.href = "/html/Auth.html";
       return;
     }
@@ -264,20 +261,36 @@ import { requireLogin } from "./guard.js";
       // 1) Upload images
       const imageUrls = await uploadImages(v.files, freshUser.id);
 
-      // 2) Insert event
+      // 2) Insert event (matchar din DB)
       const payload = {
         title: v.title,
         place: v.place,
-        date: v.date,
-        time: v.startTime,
-        end_time: v.endTime,
+        date: v.date,              // date column (YYYY-MM-DD)
+        time: v.startTime,         // time column (HH:MM)
+        end_time: v.endTime,       // text (HH:MM eller "sent" eller null)
         info: v.info,
         user_id: freshUser.id,
-        image_urls: imageUrls.length ? imageUrls : null
+        image_urls: imageUrls      // alltid array ([])
       };
 
-      const { error } = await supabase.from("events").insert([payload]);
-      if (error) throw error;
+      const { data: inserted, error } = await supabase
+    .from("events")
+    .insert([payload])
+    .select("id")
+    .single();
+
+  if (error) throw error;
+
+  const { error: attendErr } = await supabase
+  .from("event_attendees")
+  .insert([{ event_id: eventId, user_id: freshUser.id }]);
+
+// om den redan finns av någon anledning, ignorera
+if (attendErr) console.warn("Kunde inte auto-anmäla skaparen:", attendErr.message);
+
+
+  const eventId = inserted.id;
+
 
       showMsg("success", "✅ Händelsen är uppladdad!");
       form.reset();
@@ -289,16 +302,14 @@ import { requireLogin } from "./guard.js";
       if (endLateEl) endLateEl.checked = false;
       setEndMode();
 
-      // ✅ Hem är index.html i root
       setTimeout(() => (window.location.href = "../index.html"), 650);
-
     } catch (err) {
       console.error("Upload failed:", err);
 
       const msg =
         String(err?.message || "").includes("row-level security")
           ? "❌ Blockeras av RLS policy. Kolla policies på events + storage."
-          : err?.message || "❌ Kunde inte ladda upp.";
+          : (err?.message || "❌ Kunde inte ladda upp.");
 
       showMsg("error", msg);
     } finally {
