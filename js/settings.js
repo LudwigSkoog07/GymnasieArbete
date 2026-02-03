@@ -3,7 +3,7 @@ const statusEl = document.getElementById("themeStatus");
 
 function labelFor(value) {
   if (value === "light") return "Ljust";
-  if (value === "dark") return "MÃ¶rkt";
+  if (value === "dark") return "Mörkt";
   return "System";
 }
 

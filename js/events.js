@@ -77,6 +77,77 @@ function fmtKommer(count) {
   return `${count} st kommer`;
 }
 
+function normalizeMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return "";
+
+  if (/^https?:\/\//i.test(v)) return v;
+
+  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.|maps\.google\.)/i.test(v)) {
+    return `https://${v}`;
+  }
+
+  return v;
+}
+
+function isGoogleMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return false;
+
+  return (
+    /^https?:\/\/(www\.)?google\.[^/]+\/maps/i.test(v) ||
+    /^https?:\/\/maps\.google\.[^/]+/i.test(v) ||
+    /^https?:\/\/maps\.app\.goo\.gl\//i.test(v) ||
+    /^https?:\/\/goo\.gl\/maps\//i.test(v)
+  );
+}
+
+function decodePlaceLabel(raw) {
+  try {
+    return decodeURIComponent(String(raw).replace(/\+/g, " "));
+  } catch {
+    return String(raw).replace(/\+/g, " ");
+  }
+}
+
+function extractPlaceLabelFromUrl(raw) {
+  try {
+    const url = new URL(raw);
+    const path = url.pathname || "";
+    const idx = path.indexOf("/place/");
+    if (idx !== -1) {
+      const after = path.slice(idx + "/place/".length);
+      const segment = after.split("/")[0];
+      if (segment) return decodePlaceLabel(segment);
+    }
+
+    const q =
+      url.searchParams.get("query") ||
+      url.searchParams.get("q") ||
+      url.searchParams.get("destination");
+    if (q) return decodePlaceLabel(q);
+  } catch {}
+
+  return "";
+}
+
+function buildPlaceMeta(placeValue) {
+  const raw = (placeValue || "").trim();
+  if (!raw) return { label: "", href: "" };
+
+  const normalized = normalizeMapsUrl(raw);
+
+  if (isGoogleMapsUrl(normalized)) {
+    const label = extractPlaceLabelFromUrl(normalized) || "Öppna plats";
+    return { label, href: normalized };
+  }
+
+  return {
+    label: raw,
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(raw)}`
+  };
+}
+
 /**
  * Sluttid:
  * - om end_time är "HH:MM" => använd
@@ -473,6 +544,7 @@ function renderEvent(ev) {
   const endText = ev.end_time
     ? `⏳ ${endResolved === "sent" ? "Sent" : (endResolved ? fmtTime(endResolved) : "")}`
     : "";
+  const placeMeta = buildPlaceMeta(ev.place);
 
   const canDelete = isCurrentUserAdmin || (currentUserId && currentUserId === ev.user_id);
 
@@ -502,7 +574,7 @@ function renderEvent(ev) {
         <h3 class="event-name">${ev.title || ""}</h3>
 
         <ul class="event-meta">
-          <li>📍 ${ev.place || ""}</li>
+          ${placeMeta.label ? `<li>📍 <a class="event-place-link" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">${placeMeta.label}</a></li>` : ""}
           <li>📅 ${fmtDateSv(ev.date) || ""}</li>
           ${timeText ? `<li>${timeText}</li>` : ""}
           ${endText ? `<li>${endText}</li>` : ""}

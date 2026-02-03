@@ -62,6 +62,77 @@ function validUsername(s) {
   return /^[a-zA-Z0-9._-]+$/.test(v);
 }
 
+function normalizeMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return "";
+
+  if (/^https?:\/\//i.test(v)) return v;
+
+  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.|maps\.google\.)/i.test(v)) {
+    return `https://${v}`;
+  }
+
+  return v;
+}
+
+function isGoogleMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return false;
+
+  return (
+    /^https?:\/\/(www\.)?google\.[^/]+\/maps/i.test(v) ||
+    /^https?:\/\/maps\.google\.[^/]+/i.test(v) ||
+    /^https?:\/\/maps\.app\.goo\.gl\//i.test(v) ||
+    /^https?:\/\/goo\.gl\/maps\//i.test(v)
+  );
+}
+
+function decodePlaceLabel(raw) {
+  try {
+    return decodeURIComponent(String(raw).replace(/\+/g, " "));
+  } catch {
+    return String(raw).replace(/\+/g, " ");
+  }
+}
+
+function extractPlaceLabelFromUrl(raw) {
+  try {
+    const url = new URL(raw);
+    const path = url.pathname || "";
+    const idx = path.indexOf("/place/");
+    if (idx !== -1) {
+      const after = path.slice(idx + "/place/".length);
+      const segment = after.split("/")[0];
+      if (segment) return decodePlaceLabel(segment);
+    }
+
+    const q =
+      url.searchParams.get("query") ||
+      url.searchParams.get("q") ||
+      url.searchParams.get("destination");
+    if (q) return decodePlaceLabel(q);
+  } catch {}
+
+  return "";
+}
+
+function buildPlaceMeta(placeValue) {
+  const raw = (placeValue || "").trim();
+  if (!raw) return { label: "", href: "" };
+
+  const normalized = normalizeMapsUrl(raw);
+
+  if (isGoogleMapsUrl(normalized)) {
+    const label = extractPlaceLabelFromUrl(normalized) || "Öppna plats";
+    return { label, href: normalized };
+  }
+
+  return {
+    label: raw,
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(raw)}`
+  };
+}
+
 /* =========================
    Local persistence (username)
 ========================= */
@@ -212,6 +283,11 @@ function renderCard(ev) {
   const timeText = ev.time ? `🕒 ${fmtTime(ev.time)}` : "";
   const endText =
     ev.end_time ? ` ⏳ ${ev.end_time === "sent" ? "Sent" : fmtTime(ev.end_time)}` : "";
+  const placeMeta = buildPlaceMeta(ev.place);
+  const placeHtml = placeMeta.label
+    ? `📍 <a class="my-place-link" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">${placeMeta.label}</a>`
+    : "";
+  const metaSeparator = placeHtml ? " • " : "";
 
   return `
     <article class="my-card" data-event-id="${ev.id}">
@@ -236,7 +312,7 @@ function renderCard(ev) {
             </button>
           </div>
 
-          <p class="my-meta">📍 ${ev.place || ""} • 📅 ${ev.date || ""} ${timeText}${endText}</p>
+          <p class="my-meta">${placeHtml}${metaSeparator}📅 ${ev.date || ""} ${timeText}${endText}</p>
         </div>
       </div>
 

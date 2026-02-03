@@ -43,12 +43,26 @@
           </svg>
         </a>
 
-        <a href="Profil.html" class="icon-btn is-active" title="Account" aria-label="Account" data-auth="required">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round" />
-            <circle cx="12" cy="8" r="4" stroke-linecap="round" />
-          </svg>
-        </a>
+        <div class="profile-menu">
+          <button
+            class="icon-btn profile-toggle is-active"
+            title="Profil"
+            aria-label="Profil"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round" />
+              <circle cx="12" cy="8" r="4" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          <div class="profile-dropdown" role="menu" aria-label="Profilmeny">
+            <a href="Profil.html" class="profile-item" role="menuitem" data-auth="required">Profil</a>
+            <a href="Installningar.html" class="profile-item" role="menuitem" data-auth="required">Inställningar</a>
+          </div>
+        </div>
       </nav>
 
       <div class="header-actions">

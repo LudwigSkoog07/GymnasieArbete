@@ -323,6 +323,101 @@ body::after{
 .icon-btn.is-active svg{ stroke: var(--accent); }
 .icon-btn.is-active::after{ color: var(--accent); }
 
+/* =========================
+   PROFILE DROPDOWN
+========================= */
+.profile-menu{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-toggle{
+  position: relative;
+}
+
+.profile-dropdown{
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 190px;
+
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+
+  background: var(--surface-stronger);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out),
+              transform var(--dur-2) var(--ease-pop);
+  z-index: 1002;
+}
+
+.profile-item{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+
+  transition: transform var(--dur-1) var(--ease-pop),
+              background var(--dur-1) var(--ease-out),
+              border-color var(--dur-1) var(--ease-out),
+              box-shadow var(--dur-1) var(--ease-out);
+}
+
+.profile-item:hover{
+  transform: translateY(-1px);
+  background: var(--surface-muted-3);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-item.is-disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+.profile-item.is-disabled:hover{
+  transform: none;
+  box-shadow: none;
+  background: var(--surface-muted);
+  border-color: var(--border-soft);
+}
+
+.profile-menu.is-open .profile-dropdown,
+.profile-menu:focus-within .profile-dropdown{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+@media (hover: hover) and (pointer: fine){
+  .profile-menu:hover .profile-dropdown{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}
+
 /* Focus */
 .icon-btn:focus-visible,
 .menu-toggle:focus-visible{
@@ -430,6 +525,44 @@ body::after{
     border-radius: 16px;
     justify-content:flex-start;
     padding: 0 14px;
+  }
+
+  .profile-menu{
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-dropdown{
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: 6px;
+    padding: 0 8px;
+    background: var(--surface-muted);
+    border-color: var(--border-soft);
+    box-shadow: none;
+    transform: none;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity var(--dur-2) var(--ease-out),
+                max-height var(--dur-2) var(--ease-out),
+                padding var(--dur-2) var(--ease-out);
+  }
+
+  .profile-menu.is-open .profile-dropdown,
+  .profile-menu:focus-within .profile-dropdown{
+    opacity: 1;
+    max-height: 240px;
+    padding: 8px;
+    pointer-events: auto;
+  }
+
+  .profile-item{
+    background: var(--surface-strong);
+    border-color: var(--border-soft);
   }
 }
 

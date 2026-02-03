@@ -17,12 +17,12 @@
     <div class="container">
       <div class="left">
         <div class="avatar" aria-hidden="true">
-          <img src="../img/Eventslogg.png" alt="HÃ¶ganÃ¤sEvents">
+          <img src="../img/Eventslogg.png" alt="HöganäsEvents">
         </div>
 
-        <a class="brand" href="../index.html" aria-label="HÃ¶ganÃ¤sEvents hem">
-          <span class="brand-name">HÃ¶ganÃ¤sEvents</span>
-          <span class="brand-tag">Lokalt â€¢ Snabbt â€¢ Enkelt</span>
+        <a class="brand" href="../index.html" aria-label="HöganäsEvents hem">
+          <span class="brand-name">HöganäsEvents</span>
+          <span class="brand-tag">Lokalt • Snabbt • Enkelt</span>
         </a>
       </div>
 
@@ -45,12 +45,26 @@
           </svg>
         </a>
 
-        <a href="Profil.html" class="icon-btn" title="Profil" aria-label="Profil" data-auth="required">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round" />
-            <circle cx="12" cy="8" r="4" stroke-linecap="round" />
-          </svg>
-        </a>
+        <div class="profile-menu">
+          <button
+            class="icon-btn profile-toggle"
+            title="Profil"
+            aria-label="Profil"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round" />
+              <circle cx="12" cy="8" r="4" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          <div class="profile-dropdown" role="menu" aria-label="Profilmeny">
+            <a href="Profil.html" class="profile-item" role="menuitem" data-auth="required">Profil</a>
+            <a href="Installningar.html" class="profile-item" role="menuitem" data-auth="required">Inställningar</a>
+          </div>
+        </div>
       </nav>
 
       <div class="header-actions">

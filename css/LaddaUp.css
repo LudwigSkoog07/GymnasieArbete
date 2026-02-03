@@ -312,6 +312,20 @@ button.primary:disabled{
   font-weight: 650;
 }
 
+.maps-hint{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.maps-open{
+  color: #1877f2;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Disabled input */
 .is-disabled{
   opacity: 0.7;

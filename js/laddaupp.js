@@ -149,11 +149,37 @@ imagesEl?.addEventListener("change", (e) => {
 /* =========================
    Validation
 ========================= */
+function normalizeMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return "";
+
+  if (/^https?:\/\//i.test(v)) return v;
+
+  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.|maps\.google\.)/i.test(v)) {
+    return `https://${v}`;
+  }
+
+  return v;
+}
+
+function isGoogleMapsUrl(raw) {
+  const v = (raw || "").trim();
+  if (!v) return false;
+
+  return (
+    /^https?:\/\/(www\.)?google\.[^/]+\/maps/i.test(v) ||
+    /^https?:\/\/maps\.google\.[^/]+/i.test(v) ||
+    /^https?:\/\/maps\.app\.goo\.gl\//i.test(v) ||
+    /^https?:\/\/goo\.gl\/maps\//i.test(v)
+  );
+}
+
 function validate() {
   clearErrors();
 
   const title = (titleEl?.value || "").trim();
-  const place = (placeEl?.value || "").trim();
+  const placeRaw = (placeEl?.value || "").trim();
+  const place = normalizeMapsUrl(placeRaw);
   const date = (dateEl?.value || "").trim(); // YYYY-MM-DD
 
   const startTime = (startTimeEl?.value || "").trim(); // HH:MM
@@ -163,7 +189,12 @@ function validate() {
   let ok = true;
 
   if (title.length < 3) { setFieldError(titleEl, "Skriv en titel (minst 3 tecken)."); ok = false; }
-  if (place.length < 3) { setFieldError(placeEl, "Skriv en plats (minst 3 tecken)."); ok = false; }
+  if (placeEl && placeRaw !== place) placeEl.value = place;
+
+  if (!isGoogleMapsUrl(place)) {
+    setFieldError(placeEl, "Klistra in en giltig Google Maps-lÃ¤nk.");
+    ok = false;
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setFieldError(dateEl, "Välj ett giltigt datum."); ok = false; }
 
   if (!startTime || !/^\d{2}:\d{2}$/.test(startTime)) {
