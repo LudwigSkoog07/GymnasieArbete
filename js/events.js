@@ -705,8 +705,11 @@ function wireEvents() {
         }
         // ta bort från UI
         card.remove();
-        const remaining = document.querySelectorAll('.event-card').length;
+        const remaining = document.querySelectorAll(".event-card").length;
         countEl.textContent = `${remaining} händelser`;
+        if (remaining === 0) {
+          empty.hidden = false;
+        }
       } catch (err) {
         alert("Kunde inte ta bort: " + (err?.message || err));
       }
