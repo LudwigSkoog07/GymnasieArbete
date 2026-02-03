@@ -1,0 +1,138 @@
+/* =========================
+   Installningar.css â€” settings page
+========================= */
+
+.page-installningar{
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.settings-main{
+  padding: 28px 16px 92px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.settings-card{
+  border-radius: 22px;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+.settings-head{
+  margin-bottom: 18px;
+}
+
+.settings-title{
+  margin: 0;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+}
+
+.settings-sub{
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.settings-group{
+  display: grid;
+  gap: 12px;
+}
+
+.settings-label{
+  margin: 0;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted-2);
+}
+
+.theme-option{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-soft-2);
+  cursor: pointer;
+  transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
+              box-shadow 180ms ease,
+              background 180ms ease;
+}
+
+.theme-option:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-option input{
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.theme-text{
+  display:flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-title{
+  font-weight: 900;
+  color: var(--text-strong);
+}
+
+.theme-desc{
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 650;
+}
+
+.theme-status{
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+
+.settings-actions{
+  margin-top: 18px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.settings-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
+              box-shadow 180ms ease,
+              background 180ms ease;
+}
+
+.settings-link:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 520px){
+  .settings-actions{ justify-content: stretch; }
+  .settings-link{ width: 100%; }
+}

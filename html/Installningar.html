@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../js/theme.js"></script>
+  <link rel="stylesheet" href="../css/Global.css" />
+  <link rel="stylesheet" href="../css/Installningar.css" />
+  <title>InstÃ¤llningar</title>
+  <link rel="icon" type="image/x-icon" href="../img/Eventslogg.png" />
+</head>
+
+<body class="page-installningar">
+  <header class="site-header">
+    <div class="container">
+      <div class="left">
+        <div class="avatar" aria-hidden="true">
+          <img src="../img/Eventslogg.png" alt="HÃ¶ganÃ¤sEvents">
+        </div>
+
+        <a class="brand" href="../index.html" aria-label="HÃ¶ganÃ¤sEvents hem">
+          <span class="brand-name">HÃ¶ganÃ¤sEvents</span>
+          <span class="brand-tag">Lokalt â€¢ Snabbt â€¢ Enkelt</span>
+        </a>
+      </div>
+
+      <nav id="mobileNav" class="right" aria-label="Primary">
+        <a href="../index.html" class="icon-btn" title="Home" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+
+        <a href="LaddaUp.html" class="icon-btn" title="Upload" aria-label="Upload" data-auth="required">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12" stroke-linecap="round" />
+            <path d="M7 8l5-5 5 5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 21h16" stroke-linecap="round" />
+          </svg>
+        </a>
+
+        <a href="Profil.html" class="icon-btn" title="Account" aria-label="Account" data-auth="required">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 21a8 8 0 0 0-16 0" stroke-linecap="round" />
+            <circle cx="12" cy="8" r="4" stroke-linecap="round" />
+          </svg>
+        </a>
+      </nav>
+
+      <div class="header-actions">
+        <a
+          id="authCta"
+          class="auth-cta"
+          href="Auth.html"
+          aria-label="Logga in eller skapa konto"
+          data-hide-when-authed="true"
+        >
+          <span class="cta-long">Logga in / Skapa konto</span>
+          <span class="cta-short">Logga in</span>
+        </a>
+
+        <button
+          class="menu-toggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mobileNav"
+          type="button"
+        >
+          <span class="hamburger"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="settings-main">
+    <section class="settings-card" aria-label="InstÃ¤llningar">
+      <div class="settings-head">
+        <h1 class="settings-title">InstÃ¤llningar</h1>
+        <p class="settings-sub">
+          VÃ¤lj hur appen ska se ut pÃ¥ din enhet.
+        </p>
+      </div>
+
+      <div class="settings-group" role="radiogroup" aria-label="Tema">
+        <p class="settings-label">Tema</p>
+
+        <label class="theme-option">
+          <input type="radio" name="theme" value="light" />
+          <span class="theme-text">
+            <span class="theme-title">Ljust</span>
+            <span class="theme-desc">Alltid ljust tema.</span>
+          </span>
+        </label>
+
+        <label class="theme-option">
+          <input type="radio" name="theme" value="dark" />
+          <span class="theme-text">
+            <span class="theme-title">MÃ¶rkt</span>
+            <span class="theme-desc">Alltid mÃ¶rkt tema.</span>
+          </span>
+        </label>
+
+        <label class="theme-option">
+          <input type="radio" name="theme" value="system" />
+          <span class="theme-text">
+            <span class="theme-title">System</span>
+            <span class="theme-desc">FÃ¶ljer enhetens instÃ¤llning.</span>
+          </span>
+        </label>
+
+        <div class="theme-status" id="themeStatus" aria-live="polite"></div>
+      </div>
+
+      <div class="settings-actions">
+        <a class="settings-link" href="Profil.html">Tillbaka till profil</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/Main.js"></script>
+  <script type="module" src="../js/headerAuth.js"></script>
+
+  <script type="module">
+    import { requireLogin } from "../js/guard.js";
+    await requireLogin();
+  </script>
+
+  <script src="../js/settings.js"></script>
+</body>
+</html>

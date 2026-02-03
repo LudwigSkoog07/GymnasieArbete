@@ -3,8 +3,8 @@
 ========================= */
 
 .page-auth {
-  background: #f0f2f5;
-  color: #0f172a;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 /* Center layout */
@@ -20,13 +20,13 @@
   width: 100%;
   max-width: 420px;
 
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
   border-radius: 22px;
 
   padding: 22px;
 
-  box-shadow: 0 18px 44px rgba(15,23,42,0.10);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
 
@@ -48,7 +48,7 @@
 
 .auth-sub {
   margin: 6px 0 18px;
-  color: rgba(15,23,42,0.62);
+  color: var(--text-muted);
   font-weight: 700;
   line-height: 1.5;
 }
@@ -67,22 +67,22 @@
 .auth-field label {
   font-size: 13px;
   font-weight: 900;
-  color: rgba(15,23,42,0.78);
+  color: var(--text-icon);
 }
 
 .auth-field input {
   height: 46px;
   border-radius: 16px;
-  border: 1px solid rgba(15,23,42,0.10);
+  border: 1px solid var(--border);
 
   padding: 0 14px;
   font-size: 14px;
   font-weight: 650;
 
-  background: rgba(255,255,255,0.92);
+  background: var(--surface-stronger);
   outline: none;
 
-  box-shadow: 0 10px 22px rgba(15,23,42,0.05);
+  box-shadow: var(--shadow-sm);
   transition: box-shadow 180ms ease, border-color 180ms ease, transform 160ms ease;
 }
 
@@ -118,8 +118,8 @@
 }
 
 .auth-btn.ghost {
-  background: rgba(15,23,42,0.06);
-  color: rgba(15,23,42,0.88);
+  background: var(--surface-muted);
+  color: var(--text);
 }
 
 .auth-btn:hover {
