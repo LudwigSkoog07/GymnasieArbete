@@ -9,8 +9,10 @@ const form = document.getElementById("eventForm");
 const formMsg = document.getElementById("formMsg");
 
 const titleEl = document.getElementById("title");
+const priceEl = document.getElementById("price");
 const placeEl = document.getElementById("place");
 const dateEl = document.getElementById("date");
+const categoryGroup = document.getElementById("categoryGroup");
 
 const startTimeEl = document.getElementById("startTime");
 const endTimeEl = document.getElementById("endTime");
@@ -20,6 +22,7 @@ const infoEl = document.getElementById("info");
 
 const imagesEl = document.getElementById("images");
 const imgPreviewEl = document.getElementById("imgPreview");
+const uploadBoxEl = document.querySelector(".upload-box");
 
 const IMAGE_BUCKET = "event-images";
 let selectedFiles = [];
@@ -53,14 +56,15 @@ function clearErrors() {
     formMsg.className = "form-msg";
   }
 
-  form.querySelectorAll("input, textarea").forEach((el) => el.classList.remove("is-invalid"));
+  form.querySelectorAll("input, textarea, select").forEach((el) => el.classList.remove("is-invalid"));
+  form.querySelectorAll(".pill-group, .upload-box").forEach((el) => el.classList.remove("is-invalid"));
   form.querySelectorAll(".error-text").forEach((el) => el.remove());
 }
 
 function setFieldError(el, msg) {
   if (!el) return;
-  el.classList.add("is-invalid");
-  const wrap = el.closest(".field");
+  if (el.classList) el.classList.add("is-invalid");
+  const wrap = el.closest?.(".field") || el;
   if (!wrap) return;
 
   const existing = wrap.querySelector(".error-text");
@@ -141,7 +145,7 @@ function renderPreviews() {
 
 imagesEl?.addEventListener("change", (e) => {
   const newFiles = Array.from(e.target.files || []);
-  selectedFiles = [...selectedFiles, ...newFiles].slice(0, 5);
+  selectedFiles = newFiles.slice(0, 1);
   updateInputFiles();
   renderPreviews();
 });
@@ -153,16 +157,20 @@ function validate() {
   clearErrors();
 
   const title = (titleEl?.value || "").trim();
+  const price = (priceEl?.value || "").trim();
   const place = (placeEl?.value || "").trim();
   const date = (dateEl?.value || "").trim(); // YYYY-MM-DD
 
   const startTime = (startTimeEl?.value || "").trim(); // HH:MM
   const endTime = getEndTimeValue(); // "sent" | "HH:MM" | null
   const info = (infoEl?.value || "").trim();
+  const category = document.querySelector('input[name="category"]:checked')?.value || "";
 
   let ok = true;
 
   if (title.length < 3) { setFieldError(titleEl, "Skriv en titel (minst 3 tecken)."); ok = false; }
+  if (!category) { setFieldError(categoryGroup, "Välj en kategori."); ok = false; }
+  if (!price) { setFieldError(priceEl, "Skriv ett pris (t.ex. Gratis eller 50 kr)."); ok = false; }
   if (!place || place.length < 3) { setFieldError(placeEl, "Skriv en adress (minst 3 tecken)."); ok = false; }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setFieldError(dateEl, "Välj ett giltigt datum."); ok = false; }
 
@@ -186,6 +194,7 @@ function validate() {
   }
 
   if (info && info.length > 600) { setFieldError(infoEl, "Max 600 tecken i information."); ok = false; }
+  if (selectedFiles.length === 0) { setFieldError(uploadBoxEl || imagesEl, "Lägg till minst en bild."); ok = false; }
 
   if (!ok) {
     showMsg("error", "Kolla fälten markerade i rött.");
@@ -193,7 +202,7 @@ function validate() {
     return null;
   }
 
-  return { title, place, date, startTime, endTime, info: info || null, files: selectedFiles };
+  return { title, category, price, place, date, startTime, endTime, info: info || null, files: selectedFiles };
 }
 
 /* =========================
@@ -274,6 +283,8 @@ async function uploadImages(files, userId) {
       // 3) Insert event (matchar din DB)
       const payload = {
         title: v.title,
+        category: v.category,
+        price: v.price,
         place: v.place,
         date: v.date,              // date column (YYYY-MM-DD)
         time: v.startTime,         // time column (HH:MM)
@@ -282,15 +293,6 @@ async function uploadImages(files, userId) {
         user_id: freshUser.id,
         image_urls: imageUrls      // alltid array ([])
       };
-
-      // Lägg till lat/lon om de finns (defensivt)
-      const latRaw = document.getElementById("placeLat")?.value || "";
-      const lonRaw = document.getElementById("placeLon")?.value || "";
-      const lat = Number.parseFloat(String(latRaw).trim());
-      const lon = Number.parseFloat(String(lonRaw).trim());
-
-      if (Number.isFinite(lat)) payload.place_lat = lat;
-      if (Number.isFinite(lon)) payload.place_lon = lon;
 
       async function insertEventWithFallback(data) {
         let res = await supabase
@@ -302,18 +304,13 @@ async function uploadImages(files, userId) {
         if (!res.error) return res;
 
         const msg = String(res.error?.message || "").toLowerCase();
-        const missingColumn =
-          res.error?.code === "42703" ||
-          msg.includes('column "place_lat"') ||
-          msg.includes('column "place_lon"') ||
-          msg.includes("place_lat") ||
-          msg.includes("place_lon");
+        const missingColumn = res.error?.code === "42703" || msg.includes("column");
 
         if (!missingColumn) return res;
 
         const fallback = { ...data };
-        delete fallback.place_lat;
-        delete fallback.place_lon;
+        if (msg.includes("category") || res.error?.code === "42703") delete fallback.category;
+        if (msg.includes("price") || res.error?.code === "42703") delete fallback.price;
 
         return await supabase
           .from("events")

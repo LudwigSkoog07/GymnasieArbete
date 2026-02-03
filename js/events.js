@@ -7,12 +7,33 @@ import { supabase } from "./supabaseClient.js";
 const grid = document.getElementById("eventsGrid");
 const empty = document.getElementById("eventsEmpty");
 const countEl = document.getElementById("eventsCount");
+const filterPillsEl = document.getElementById("filterPills");
+const filterCountEl = document.getElementById("filterCount");
+const countEl2 = document.getElementById("eventsCount2");
+const emptyMsgEl = empty?.querySelector("p");
 
 /* =========================
    State
 ========================= */
 let currentUserId = null;
 let isCurrentUserAdmin = false;
+let allEvents = [];
+let activeCategory = "Alla";
+
+/* =========================
+   Categories / Filters
+========================= */
+const CATEGORY_OPTIONS = [
+  "Alla",
+  "Musik",
+  "Konst & Kultur",
+  "Sport & Motion",
+  "Mat & Dryck",
+  "Familj",
+  "Marknad",
+  "Föreläsning",
+  "Natur & Friluftsliv"
+];
 
 /* =========================
    Helpers (svenska)
@@ -54,6 +75,62 @@ function fmtDateSv(d) {
     year: "numeric",
   });
 }
+
+function truncate(text, max = 120) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  if (s.length <= max) return s;
+  return s.slice(0, max).trimEnd() + "…";
+}
+
+function normalizeCategory(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return "";
+  const found = CATEGORY_OPTIONS.find((c) => c.toLowerCase() === v);
+  return found || raw;
+}
+
+function isFreePrice(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return v === "gratis" || v === "free" || v === "0" || v === "0kr" || v === "0 kr";
+}
+
+function formatPriceLabel(raw) {
+  const v = String(raw || "").trim();
+  if (!v) return "";
+  if (isFreePrice(v)) return "Gratis";
+  if (/^\d+(?:[.,]\d+)?$/.test(v)) return `${v} kr`;
+  return v;
+}
+
+const ICONS = {
+  calendar: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+      <path d="M8 2v4M16 2v4M3 10h18"></path>
+    </svg>
+  `,
+  clock: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M12 7v5l3 3"></path>
+    </svg>
+  `,
+  pin: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"></path>
+      <circle cx="12" cy="10" r="2.5"></circle>
+    </svg>
+  `,
+  users: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="8" cy="8" r="3"></circle>
+      <circle cx="17" cy="9" r="2.5"></circle>
+      <path d="M2 20a6 6 0 0 1 12 0"></path>
+      <path d="M14 20a5 5 0 0 1 8 0"></path>
+    </svg>
+  `
+};
 
 function initialsFrom(name) {
   const s = (name || "").trim();
@@ -495,6 +572,20 @@ function ensureAdminToggle() {
    Data: Events + profiles join/fallback
 ========================= */
 async function loadEventsWithJoin() {
+  const res = await supabase
+    .from("events")
+    .select(`
+      id, created_at, title, category, price, place, date, time, end_time, info, image_urls, user_id,
+      profiles:user_id ( id, username, full_name, avatar_url )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (!res.error) return res;
+
+  const msg = String(res.error?.message || "").toLowerCase();
+  const missingColumn = res.error?.code === "42703" || msg.includes("category") || msg.includes("price");
+  if (!missingColumn) return res;
+
   return await supabase
     .from("events")
     .select(`
@@ -505,6 +596,17 @@ async function loadEventsWithJoin() {
 }
 
 async function loadEventsNoJoin() {
+  const res = await supabase
+    .from("events")
+    .select("id, created_at, title, category, price, place, date, time, end_time, info, image_urls, user_id")
+    .order("created_at", { ascending: false });
+
+  if (!res.error) return res;
+
+  const msg = String(res.error?.message || "").toLowerCase();
+  const missingColumn = res.error?.code === "42703" || msg.includes("category") || msg.includes("price");
+  if (!missingColumn) return res;
+
   return await supabase
     .from("events")
     .select("id, created_at, title, place, date, time, end_time, info, image_urls, user_id")
@@ -540,12 +642,18 @@ function renderEvent(ev) {
   const initials = initialsFrom(authorName);
 
   const isOwner = !!currentUserId && currentUserId === ev.user_id;
-  const timeText = ev.time ? `🕒 ${fmtTime(ev.time)}` : "";
   const endResolved = resolveEndTime(ev);
-  const endText = ev.end_time
-    ? `⏳ ${endResolved === "sent" ? "Sent" : (endResolved ? fmtTime(endResolved) : "")}`
+  const timeRange = ev.time
+    ? (endResolved && endResolved !== "sent"
+        ? `${fmtTime(ev.time)}–${fmtTime(endResolved)}`
+        : (endResolved === "sent" ? `${fmtTime(ev.time)} • Sent` : fmtTime(ev.time)))
     : "";
   const placeMeta = buildPlaceMeta(ev.place);
+  const dateText = fmtDateSv(ev.date) || "";
+  const categoryLabel = normalizeCategory(ev.category);
+  const priceLabel = formatPriceLabel(ev.price);
+  const freePrice = isFreePrice(ev.price);
+  const desc = ev.info ? truncate(ev.info, 120) : "";
 
   const canDelete = isCurrentUserAdmin || (currentUserId && currentUserId === ev.user_id);
 
@@ -555,82 +663,122 @@ function renderEvent(ev) {
 
   return `
     <article class="event-card ${iAmComing ? "is-attending" : ""}" data-event-id="${ev.id}" data-owner-id="${ev.user_id || ""}">
-      ${
-        firstImg
-          ? `<div class="event-image">
-               <img src="${firstImg}" alt="Evenemangsbild" loading="lazy">
-             </div>`
-          : ""
-      }
+      <div class="event-media">
+        ${
+          firstImg
+            ? `<img src="${firstImg}" alt="${ev.title ? `Bild för ${ev.title}` : "Evenemangsbild"}" loading="lazy">`
+            : `<div class="event-media-placeholder">Ingen bild</div>`
+        }
+        <div class="event-badges">
+          ${categoryLabel ? `<span class="event-badge cat" data-category="${categoryLabel}">${categoryLabel}</span>` : ""}
+          ${priceLabel ? `<span class="event-badge price ${freePrice ? "is-free" : ""}">${priceLabel}</span>` : ""}
+        </div>
+        ${canDelete ? `<button class="event-delete" data-action="delete-event" type="button" title="Ta bort händelse" aria-label="Ta bort händelse">🗑️</button>` : ""}
+      </div>
 
       <div class="event-body">
-        <div class="event-top">
-          <div class="event-avatar">${initials}</div>
-          <div>
-            <div class="event-author">${authorName}</div>
-            <div class="event-timeago">${timeAgo(ev.created_at)}</div>
-          </div>
-          ${canDelete ? `<div class="event-actions"><button class="event-delete" data-action="delete-event" type="button" title="Ta bort händelse">🗑️</button></div>` : ""}
+        <h3 class="event-title">${ev.title || ""}</h3>
+
+        ${desc ? `<p class="event-desc">${desc}</p>` : ""}
+
+        <div class="event-meta">
+          ${dateText ? `<span class="event-meta-item">${ICONS.calendar}<span>${dateText}</span></span>` : ""}
+          ${timeRange ? `<span class="event-meta-item">${ICONS.clock}<span>${timeRange}</span></span>` : ""}
         </div>
 
-        <h3 class="event-name">${ev.title || ""}</h3>
+        ${placeMeta.label ? `
+          <div class="event-meta">
+            <span class="event-meta-item">${ICONS.pin}<a class="event-place-link" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">${placeMeta.label}</a></span>
+          </div>
+        ` : ""}
 
-        <ul class="event-meta">
-          ${placeMeta.label ? `<li>📍 <a class="event-place-link" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">${placeMeta.label}</a></li>` : ""}
-          <li>📅 ${fmtDateSv(ev.date) || ""}</li>
-          ${timeText ? `<li>${timeText}</li>` : ""}
-          ${endText ? `<li>${endText}</li>` : ""}
-        </ul>
-
-        ${ev.info ? `<p class="event-desc">${ev.info}</p>` : ""}
-
-        <div class="event-attend">
-          <div class="attend-left">
-            <button
-  class="attend-btn ${iAmComing ? "is-on" : "is-off"}"
-  data-action="toggle-attend"
-  type="button"
-  ${currentUserId && !ownerLocked ? "" : "disabled"}
-  title="${currentUserId ? (ownerLocked ? "Som ägare är du alltid anmäld" : "") : "Logga in för att anmäla dig"}"
->
-  ${ownerLocked ? "Ägare" : (iAmComing ? "⛔ Avbryt" : "✅ Jag kommer")}
-</button>
-
-
-            <span class="attend-status ${iAmComing ? "is-on" : "is-off"}">
-              ${iAmComing ? "Du är anmäld" : "Inte anmäld"}
-            </span>
+        <div class="event-footer">
+          <div class="event-host">
+            <span class="event-host-avatar">${initials}</span>
+            <div class="event-host-text">
+              <span class="event-host-name">${authorName}</span>
+              <span class="event-host-time">${timeAgo(ev.created_at)}</span>
+            </div>
           </div>
 
           <div class="attend-meta">
-            <span class="attend-count">${fmtKommer(attCount)}</span>
+            <span class="attend-count">${ICONS.users}<span>${fmtKommer(attCount)}</span></span>
             <button class="attend-list" data-action="show-attendees" type="button">
               Visa lista
             </button>
           </div>
         </div>
 
-        ${
-          imgs.length > 1
-            ? `<div class="event-more">+${imgs.length - 1} fler bilder</div>`
-            : ""
-        }
+        <div class="event-attend">
+          <div class="attend-left">
+            <button
+              class="attend-btn ${iAmComing ? "is-on" : "is-off"}"
+              data-action="toggle-attend"
+              type="button"
+              ${currentUserId && !ownerLocked ? "" : "disabled"}
+              title="${currentUserId ? (ownerLocked ? "Som ägare är du alltid anmäld" : "") : "Logga in för att anmäla dig"}"
+            >
+              ${ownerLocked ? "Ägare" : (iAmComing ? "⛔ Avbryt" : "✅ Jag kommer")}
+            </button>
+
+            <span class="attend-status ${iAmComing ? "is-on" : "is-off"}">
+              ${iAmComing ? "Du är anmäld" : "Inte anmäld"}
+            </span>
+          </div>
+        </div>
+
+        ${imgs.length > 1 ? `<div class="event-more">+${imgs.length - 1} fler bilder</div>` : ""}
       </div>
     </article>
   `;
 }
 
-function renderList(list) {
-  countEl.textContent = `${list.length} händelser`;
+function renderList(list, emptyLabel = "") {
+  const count = list.length;
+  if (countEl) countEl.textContent = `${count} händelser`;
+  if (filterCountEl) filterCountEl.textContent = `${count} händelser`;
+  if (countEl2) countEl2.textContent = `${count}`;
 
-  if (list.length === 0) {
-    grid.innerHTML = "";
-    empty.hidden = false;
+  if (count === 0) {
+    if (grid) grid.innerHTML = "";
+    if (emptyMsgEl) {
+      emptyMsgEl.textContent = emptyLabel || (activeCategory === "Alla"
+        ? "Inga händelser ännu. Var först med att lägga upp en!"
+        : `Inga händelser i kategorin “${activeCategory}”.`);
+    }
+    if (empty) empty.hidden = false;
     return;
   }
 
-  empty.hidden = true;
-  grid.innerHTML = list.map(renderEvent).join("");
+  if (empty) empty.hidden = true;
+  if (grid) grid.innerHTML = list.map(renderEvent).join("");
+}
+
+function renderFilters() {
+  if (!filterPillsEl) return;
+  filterPillsEl.innerHTML = CATEGORY_OPTIONS.map((cat) => `
+    <button class="filter-pill ${cat === activeCategory ? "is-active" : ""}" data-category="${cat}" type="button">
+      ${cat}
+    </button>
+  `).join("");
+}
+
+function setActiveCategory(cat) {
+  if (!CATEGORY_OPTIONS.includes(cat)) cat = "Alla";
+  activeCategory = cat;
+  if (filterPillsEl) {
+    filterPillsEl.querySelectorAll(".filter-pill").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.category === activeCategory);
+    });
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  const list = activeCategory === "Alla"
+    ? allEvents
+    : allEvents.filter((ev) => normalizeCategory(ev.category) === activeCategory);
+  renderList(list);
 }
 
 /* =========================
@@ -705,7 +853,8 @@ async function loadEvents() {
     e.i_am_coming = mine.has(e.id);
   }
 
-  renderList(list);
+  allEvents = list;
+  applyFilters();
 }
 
 /* =========================
@@ -771,7 +920,7 @@ function wireEvents() {
       const { counts } = await fetchAttendeesMeta([eventId]);
       const newCount = counts.get(eventId) || 0;
       const countSpan = card.querySelector(".attend-count");
-      if (countSpan) countSpan.textContent = fmtKommer(newCount);
+      if (countSpan) countSpan.innerHTML = `${ICONS.users}<span>${fmtKommer(newCount)}</span>`;
 
       if (isOwner && nowOn) {
         actionBtn.disabled = true;
@@ -791,10 +940,8 @@ function wireEvents() {
           alert("Kunde inte ta bort: " + (error.message || error));
           return;
         }
-        // ta bort från UI
-        card.remove();
-        const remaining = document.querySelectorAll('.event-card').length;
-        countEl.textContent = `${remaining} händelser`;
+        allEvents = (allEvents || []).filter((e) => String(e.id) !== String(eventId));
+        applyFilters();
       } catch (err) {
         alert("Kunde inte ta bort: " + (err?.message || err));
       }
@@ -826,6 +973,15 @@ function wireEvents() {
   });
 }
 
+function wireFilters() {
+  if (!filterPillsEl) return;
+  filterPillsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-pill");
+    if (!btn) return;
+    setActiveCategory(btn.dataset.category || "Alla");
+  });
+}
+
 /* =========================
    Boot
 ========================= */
@@ -833,6 +989,8 @@ function wireEvents() {
   await loadCurrentUser();
   ensureAttendeesModal();
   ensureAdminToggle();
+  renderFilters();
+  wireFilters();
   wireEvents();
   loadEvents();
 })();

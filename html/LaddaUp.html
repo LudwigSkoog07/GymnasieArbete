@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
@@ -110,16 +110,56 @@
                 placeholder="T.ex. Sommarmarknad på Torget" required />
       </div>
 
+      <div class="field full">
+        <label>Kategori <span class="req">*</span></label>
+        <div class="pill-group" id="categoryGroup" role="radiogroup" aria-label="Kategori">
+          <label class="pill-option" data-category="Musik">
+            <input type="radio" name="category" value="Musik" required>
+            <span>Musik</span>
+          </label>
+          <label class="pill-option" data-category="Konst & Kultur">
+            <input type="radio" name="category" value="Konst & Kultur" required>
+            <span>Konst & Kultur</span>
+          </label>
+          <label class="pill-option" data-category="Sport & Motion">
+            <input type="radio" name="category" value="Sport & Motion" required>
+            <span>Sport & Motion</span>
+          </label>
+          <label class="pill-option" data-category="Mat & Dryck">
+            <input type="radio" name="category" value="Mat & Dryck" required>
+            <span>Mat & Dryck</span>
+          </label>
+          <label class="pill-option" data-category="Familj">
+            <input type="radio" name="category" value="Familj" required>
+            <span>Familj</span>
+          </label>
+          <label class="pill-option" data-category="Marknad">
+            <input type="radio" name="category" value="Marknad" required>
+            <span>Marknad</span>
+          </label>
+          <label class="pill-option" data-category="Föreläsning">
+            <input type="radio" name="category" value="Föreläsning" required>
+            <span>Föreläsning</span>
+          </label>
+          <label class="pill-option" data-category="Natur & Friluftsliv">
+            <input type="radio" name="category" value="Natur & Friluftsliv" required>
+            <span>Natur & Friluftsliv</span>
+          </label>
+        </div>
+        <div class="hint">Välj en kategori för filtret på startsidan.</div>
+      </div>
+
+      <div class="field">
+        <label for="price">Pris <span class="req">*</span></label>
+        <input id="price" name="price" type="text"
+                placeholder="Gratis / 50 kr / 100" required />
+      </div>
+
       <div class="field">
         <label for="place">Plats (adress) <span class="req">*</span></label>
         <input id="place" name="place" type="text"
                 placeholder="Skriv in adress" required />
-        <div class="hint maps-hint">
-          Sök adress och välj ett förslag för bästa träff.
-          <button class="maps-open" type="button" id="placeMapBtn" disabled>Visa på karta</button>
-        </div>
-        <input type="hidden" id="placeLat" name="placeLat" />
-        <input type="hidden" id="placeLon" name="placeLon" />
+        <div class="hint">Skriv valfri adress eller platsnamn.</div>
       </div>
 
       <div class="field">
@@ -155,13 +195,13 @@
       </div>
 
       <div class="field full">
-        <label for="images">Bilder</label>
+        <label for="images">Bild <span class="req">*</span></label>
 
         <div class="upload-box">
-          <input id="images" name="images" type="file" accept="image/*" multiple />
+          <input id="images" name="images" type="file" accept="image/*" required />
           <div class="upload-meta">
-            <div class="upload-title">Lägg till bilder (valfritt)</div>
-            <div class="upload-sub">PNG/JPG • max 5 bilder rekommenderat</div>
+            <div class="upload-title">Lägg till minst en bild</div>
+            <div class="upload-sub">PNG/JPG • endast 1 bild</div>
           </div>
         </div>
 
@@ -182,39 +222,6 @@
   <script type="module" src="../js/headerAuth.js"></script>
 
   <script type="module">
-    import { initOSMAutocomplete } from "../js/osmAutocomplete.js";
-
-    initOSMAutocomplete({ inputId: "place", latId: "placeLat", lonId: "placeLon" });
-
-    const placeInput = document.getElementById("place");
-    const latInput = document.getElementById("placeLat");
-    const lonInput = document.getElementById("placeLon");
-    const mapBtn = document.getElementById("placeMapBtn");
-
-    function syncMapButton() {
-      if (!mapBtn) return;
-      const hasCoords = !!(latInput?.value && lonInput?.value);
-      mapBtn.disabled = !hasCoords;
-    }
-
-    placeInput?.addEventListener("input", syncMapButton);
-    placeInput?.addEventListener("osm:select", syncMapButton);
-    syncMapButton();
-
-    mapBtn?.addEventListener("click", () => {
-      const lat = (latInput?.value || "").trim();
-      const lon = (lonInput?.value || "").trim();
-      const addr = (placeInput?.value || "").trim();
-
-      const url = lat && lon
-        ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}`
-        : `https://www.openstreetmap.org/search?query=${encodeURIComponent(addr)}`;
-
-      window.open(url, "_blank", "noopener");
-    });
-  </script>
-
-<script type="module">
   import { requireLogin } from "../js/guard.js";
   await requireLogin();
 </script>
@@ -222,3 +229,4 @@
 <script type="module" src="../js/laddaupp.js"></script>
 </body>
 </html>
+

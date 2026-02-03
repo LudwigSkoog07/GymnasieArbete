@@ -185,6 +185,103 @@ textarea::placeholder{
   font-weight: 650;
 }
 
+/* Category pills */
+.pill-group{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+}
+
+.pill-option{
+  --pill-bg: var(--surface-muted);
+  --pill-text: var(--text);
+  --pill-border: var(--border-soft);
+  position: relative;
+}
+
+.pill-option input{
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pill-option span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  border: 1px solid var(--pill-border);
+  font-weight: 850;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
+              box-shadow 180ms ease,
+              border-color 180ms ease,
+              background 180ms ease;
+}
+
+.pill-option span:hover{ transform: translateY(-1px); }
+
+.pill-option input:checked + span{
+  box-shadow: 0 10px 22px rgba(15,23,42,0.12);
+  border-color: rgba(15,23,42,0.18);
+  filter: brightness(0.98);
+}
+
+.pill-option input:focus-visible + span{
+  outline: 3px solid rgba(24,119,242,0.28);
+  outline-offset: 2px;
+}
+
+.pill-option[data-category="Musik"]{
+  --pill-bg: rgba(232,218,255,0.9);
+  --pill-text: #6d28d9;
+  --pill-border: rgba(124,58,237,0.25);
+}
+.pill-option[data-category="Konst & Kultur"]{
+  --pill-bg: rgba(251,191,36,0.18);
+  --pill-text: #b45309;
+  --pill-border: rgba(180,83,9,0.22);
+}
+.pill-option[data-category="Sport & Motion"]{
+  --pill-bg: rgba(191,219,254,0.9);
+  --pill-text: #1d4ed8;
+  --pill-border: rgba(29,78,216,0.22);
+}
+.pill-option[data-category="Mat & Dryck"]{
+  --pill-bg: rgba(254,215,170,0.9);
+  --pill-text: #c2410c;
+  --pill-border: rgba(194,65,12,0.22);
+}
+.pill-option[data-category="Familj"]{
+  --pill-bg: rgba(187,247,208,0.9);
+  --pill-text: #15803d;
+  --pill-border: rgba(21,128,61,0.22);
+}
+.pill-option[data-category="Marknad"]{
+  --pill-bg: rgba(254,240,138,0.9);
+  --pill-text: #92400e;
+  --pill-border: rgba(146,64,14,0.22);
+}
+.pill-option[data-category="Föreläsning"]{
+  --pill-bg: rgba(254,202,202,0.9);
+  --pill-text: #b91c1c;
+  --pill-border: rgba(185,28,28,0.22);
+}
+.pill-option[data-category="Natur & Friluftsliv"]{
+  --pill-bg: rgba(209,250,229,0.9);
+  --pill-text: #047857;
+  --pill-border: rgba(4,120,87,0.22);
+}
+
 /* Focus */
 input:focus,
 textarea:focus{
@@ -199,6 +296,12 @@ textarea:focus{
 .field textarea.is-invalid{
   border-color: rgba(220,38,38,0.40);
   box-shadow: 0 0 0 5px rgba(220,38,38,0.12), 0 16px 34px rgba(15,23,42,0.10);
+}
+
+.pill-group.is-invalid,
+.upload-box.is-invalid{
+  border-color: rgba(220,38,38,0.45);
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.12);
 }
 
 /* Status message */
@@ -431,8 +534,9 @@ button.primary:disabled{
 .img-grid{
   margin-top: 12px;
   display:grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
+  max-width: 260px;
 }
 
 .img-item{
@@ -452,7 +556,7 @@ button.primary:disabled{
 }
 
 @media (max-width: 520px){
-  .img-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .img-grid{ grid-template-columns: 1fr; max-width: 220px; }
   .upload-box{ flex-direction: column; align-items: stretch; }
   .upload-box input[type="file"]{ width: 100%; max-width: 100%; }
 }
