@@ -1,4 +1,4 @@
-// ../js/events.js
+﻿// ../js/events.js
 import { supabase } from "./supabaseClient.js";
 
 /* =========================
@@ -539,6 +539,7 @@ function renderEvent(ev) {
   const authorName = authorNameFromProfile(ev.profiles, "Användare");
   const initials = initialsFrom(authorName);
 
+  const isOwner = !!currentUserId && currentUserId === ev.user_id;
   const timeText = ev.time ? `🕒 ${fmtTime(ev.time)}` : "";
   const endResolved = resolveEndTime(ev);
   const endText = ev.end_time
@@ -550,9 +551,10 @@ function renderEvent(ev) {
 
   const attCount = ev.att_count || 0;
   const iAmComing = !!ev.i_am_coming;
+  const ownerLocked = isOwner && iAmComing;
 
   return `
-    <article class="event-card ${iAmComing ? "is-attending" : ""}" data-event-id="${ev.id}">
+    <article class="event-card ${iAmComing ? "is-attending" : ""}" data-event-id="${ev.id}" data-owner-id="${ev.user_id || ""}">
       ${
         firstImg
           ? `<div class="event-image">
@@ -588,10 +590,10 @@ function renderEvent(ev) {
   class="attend-btn ${iAmComing ? "is-on" : "is-off"}"
   data-action="toggle-attend"
   type="button"
-  ${currentUserId ? "" : "disabled"}
-  title="${currentUserId ? "" : "Logga in för att anmäla dig"}"
+  ${currentUserId && !ownerLocked ? "" : "disabled"}
+  title="${currentUserId ? (ownerLocked ? "Som ägare är du alltid anmäld" : "") : "Logga in för att anmäla dig"}"
 >
-  ${iAmComing ? "⛔ Avbryt" : "✅ Jag kommer"}
+  ${ownerLocked ? "Ägare" : (iAmComing ? "⛔ Avbryt" : "✅ Jag kommer")}
 </button>
 
 
@@ -727,6 +729,14 @@ function wireEvents() {
       const isOn = actionBtn.classList.contains("is-on");
       const nowOn = !isOn;
 
+      const ownerId = card?.dataset?.ownerId || "";
+      const isOwner = !!currentUserId && ownerId === currentUserId;
+
+      if (isOwner && isOn) {
+        alert("Som ägare är du alltid anmäld till ditt event.");
+        return;
+      }
+
       // optimistisk UI (känns snabb)
       actionBtn.classList.toggle("is-on", nowOn);
       actionBtn.classList.toggle("is-off", !nowOn);
@@ -762,6 +772,12 @@ function wireEvents() {
       const newCount = counts.get(eventId) || 0;
       const countSpan = card.querySelector(".attend-count");
       if (countSpan) countSpan.textContent = fmtKommer(newCount);
+
+      if (isOwner && nowOn) {
+        actionBtn.disabled = true;
+        actionBtn.textContent = "Ägare";
+        actionBtn.title = "Som ägare är du alltid anmäld";
+      }
 
       return;
     }
@@ -820,3 +836,4 @@ function wireEvents() {
   wireEvents();
   loadEvents();
 })();
+

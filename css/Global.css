@@ -38,6 +38,8 @@
 
   --nav-bg: rgba(255,255,255,0.78);
   --nav-border: rgba(15,23,42,0.10);
+  --nav-item-hover-bg: rgba(255,255,255,0.92);
+  --nav-item-hover-border: var(--border-strong);
 
   /* Accent */
   --accent: #1D4ED8;   /* blå */
@@ -109,6 +111,8 @@
 
   --nav-bg: rgba(15,23,42,0.82);
   --nav-border: rgba(148,163,184,0.22);
+  --nav-item-hover-bg: rgba(30,41,59,0.92);
+  --nav-item-hover-border: rgba(148,163,184,0.38);
 
   --shadow-lg: 0 26px 70px rgba(0,0,0,0.45);
   --shadow-md: 0 16px 44px rgba(0,0,0,0.40);
@@ -311,8 +315,8 @@ body::after{
 
 .icon-btn:hover{
   transform: translateY(-2px);
-  background: rgba(255,255,255,0.92);
-  border-color: var(--border-strong);
+  background: var(--nav-item-hover-bg);
+  border-color: var(--nav-item-hover-border);
   box-shadow: var(--shadow-md);
 }
 
@@ -444,7 +448,7 @@ body::after{
   transition: transform var(--dur-1) var(--ease-pop),
               background var(--dur-1) var(--ease-out);
 }
-.menu-toggle:hover{ transform: translateY(-2px); background: rgba(255,255,255,0.92); }
+.menu-toggle:hover{ transform: translateY(-2px); background: var(--nav-item-hover-bg); }
 
 .hamburger{
   position: relative;
