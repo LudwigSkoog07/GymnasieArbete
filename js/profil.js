@@ -183,10 +183,10 @@ function setAvatar(url, fallbackText) {
    DB
 ========================= */
 async function ensureProfileRow(user) {
-  const username = user.email?.split("@")[0] || "User";
+  const username = user.email?.split("@")[0] || "Användare";
   const { error } = await supabase
     .from("profiles")
-    .upsert({ id: user.id, username }, { onConflict: "id" });
+    .upsert({ id: user.id, username }, { onConflict: "id", ignoreDuplicates: true });
 
   if (error) throw error;
 }
@@ -208,7 +208,7 @@ async function loadProfile(user) {
 
   if (error && error.code !== "PGRST116") console.error("❌ loadProfile error:", error);
 
-  const username = data?.username || (user.email?.split("@")[0] || "User");
+  const username = data?.username || (user.email?.split("@")[0] || "Användare");
   const displayName = data?.full_name || username;
 
   if (nameEl) nameEl.textContent = displayName;
@@ -261,7 +261,7 @@ async function uploadAvatar(user, file) {
 
   const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
   const publicUrl = data?.publicUrl;
-  if (!publicUrl) throw new Error("Could not get public URL from avatars bucket");
+  if (!publicUrl) throw new Error("Kunde inte hämta publik URL från avatars-bucketen");
 
   const { error: dbErr } = await supabase
     .from("profiles")
@@ -293,7 +293,7 @@ function renderCard(ev) {
     <article class="my-card" data-event-id="${ev.id}">
       <div class="my-top">
         <div class="my-img">
-          ${first ? `<img src="${first}" alt="Event bild" loading="lazy">` : `<div class="my-img-empty"></div>`}
+          ${first ? `<img src="${first}" alt="Evenemangsbild" loading="lazy">` : `<div class="my-img-empty"></div>`}
         </div>
 
         <div class="my-text">
@@ -554,7 +554,7 @@ async function main() {
 
     try {
       const url = await uploadAvatar(user, file);
-      const displayName = nameEl?.textContent || "User";
+      const displayName = nameEl?.textContent || "Användare";
       setAvatar(url, initialsFrom(displayName));
     } catch (err) {
       console.error("❌ Avatar upload failed:", err);

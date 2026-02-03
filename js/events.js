@@ -421,7 +421,7 @@ function closeAdminModal() {
 }
 
 async function loadAdminPanel() {
-  openAdminModal('<p>Laddar admin-panel...</p>');
+  openAdminModal('<p>Laddar adminpanelen...</p>');
 
   try {
     const evRes = await loadEventsWithJoin();
@@ -452,11 +452,11 @@ async function loadAdminPanel() {
         <div><button data-action="refresh-admin">Uppdatera</button></div>
       </div>
       <div class="admin-tabs" style="margin-bottom:12px;">
-        <button class="admin-tab-btn is-on" data-tab="events">Events</button>
+        <button class="admin-tab-btn is-on" data-tab="events">Händelser</button>
         <button class="admin-tab-btn" data-tab="users">Användare</button>
       </div>
       <div data-admin-tab="events">
-        <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga events</li>'}</ul>
+        <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga händelser</li>'}</ul>
       </div>
       <div data-admin-tab="users" hidden>
         <ul style="list-style:none;padding:0;margin:0;">${usersHtml || '<li>Inga användare</li>'}</ul>
@@ -465,7 +465,7 @@ async function loadAdminPanel() {
 
     openAdminModal(html);
   } catch (err) {
-    openAdminModal('<p>Kunde inte ladda admin-panelen.</p>');
+    openAdminModal('<p>Kunde inte ladda adminpanelen.</p>');
     console.warn('⚠️ Admin panel load failed:', err?.message || err);
   }
 }
@@ -556,7 +556,7 @@ function renderEvent(ev) {
       ${
         firstImg
           ? `<div class="event-image">
-               <img src="${firstImg}" alt="Eventbild" loading="lazy">
+               <img src="${firstImg}" alt="Evenemangsbild" loading="lazy">
              </div>`
           : ""
       }

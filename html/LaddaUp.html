@@ -14,7 +14,7 @@
     <div class="container">
       <div class="left">
         <div class="avatar" aria-hidden="true">
-          <img src="../img/Eventslogg.png" alt="Profile">
+          <img src="../img/Eventslogg.png" alt="HöganäsEvents">
         </div>
 
         <a class="brand" href="../index.html" aria-label="HöganäsEvents hem">
@@ -23,8 +23,8 @@
         </a>
       </div>
 
-      <div id="mobileNav" class="right" role="navigation" aria-label="Primary">
-        <a href="../index.html" class="icon-btn" title="Home" aria-label="Home">
+      <div id="mobileNav" class="right" role="navigation" aria-label="Huvudnavigering">
+        <a href="../index.html" class="icon-btn" title="Hem" aria-label="Hem">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"
@@ -34,7 +34,7 @@
           </svg>
         </a>
 
-        <a href="LaddaUp.html" class="icon-btn is-active" title="Upload" aria-label="Upload" data-auth="required">
+        <a href="LaddaUp.html" class="icon-btn is-active" title="Ladda upp" aria-label="Ladda upp" data-auth="required">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3v12" stroke-linecap="round"/>
             <path d="M7 8l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -78,7 +78,7 @@
 
         <button
           class="menu-toggle"
-          aria-label="Toggle navigation menu"
+          aria-label="Öppna/stäng navigationsmeny"
           aria-expanded="false"
           aria-controls="mobileNav"
           type="button"
@@ -111,13 +111,15 @@
       </div>
 
       <div class="field">
-        <label for="place">Plats (Google Maps-lÃ¤nk) <span class="req">*</span></label>
+        <label for="place">Plats (adress) <span class="req">*</span></label>
         <input id="place" name="place" type="text"
-                placeholder="Klistra in Google Maps-lÃ¤nk" required />
+                placeholder="Skriv in adress" required />
         <div class="hint maps-hint">
-          Ã–ppna Google Maps, vÃ¤lj plats och kopiera lÃ¤nken frÃ¥n adressfÃ¤ltet.
-          <a class="maps-open" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Ã–ppna Google Maps</a>
+          Sök adress och välj ett förslag för bästa träff.
+          <button class="maps-open" type="button" id="placeMapBtn" disabled>Visa på karta</button>
         </div>
+        <input type="hidden" id="placeLat" name="placeLat" />
+        <input type="hidden" id="placeLon" name="placeLon" />
       </div>
 
       <div class="field">
@@ -178,6 +180,39 @@
 
   <script src="../js/Main.js"></script>
   <script type="module" src="../js/headerAuth.js"></script>
+
+  <script type="module">
+    import { initOSMAutocomplete } from "../js/osmAutocomplete.js";
+
+    initOSMAutocomplete({ inputId: "place", latId: "placeLat", lonId: "placeLon" });
+
+    const placeInput = document.getElementById("place");
+    const latInput = document.getElementById("placeLat");
+    const lonInput = document.getElementById("placeLon");
+    const mapBtn = document.getElementById("placeMapBtn");
+
+    function syncMapButton() {
+      if (!mapBtn) return;
+      const hasCoords = !!(latInput?.value && lonInput?.value);
+      mapBtn.disabled = !hasCoords;
+    }
+
+    placeInput?.addEventListener("input", syncMapButton);
+    placeInput?.addEventListener("osm:select", syncMapButton);
+    syncMapButton();
+
+    mapBtn?.addEventListener("click", () => {
+      const lat = (latInput?.value || "").trim();
+      const lon = (lonInput?.value || "").trim();
+      const addr = (placeInput?.value || "").trim();
+
+      const url = lat && lon
+        ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=16/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}`
+        : `https://www.openstreetmap.org/search?query=${encodeURIComponent(addr)}`;
+
+      window.open(url, "_blank", "noopener");
+    });
+  </script>
 
 <script type="module">
   import { requireLogin } from "../js/guard.js";

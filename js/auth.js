@@ -48,7 +48,7 @@ async function ensureProfile(user) {
 
   const { error } = await supabase
     .from("profiles")
-    .upsert(payload, { onConflict: "id" });
+    .upsert(payload, { onConflict: "id", ignoreDuplicates: true });
 
   if (error) {
     console.error("❌ ensureProfile error:", {
@@ -65,7 +65,7 @@ async function signUp() {
   const password = passEl.value;
 
   if (!email || password.length < 6) {
-    return show("error", "Skriv en giltig email och ett lösenord (minst 6 tecken).");
+    return show("error", "Skriv en giltig e-postadress och ett lösenord (minst 6 tecken).");
   }
 
   setLoading(true);
@@ -107,7 +107,7 @@ async function signUp() {
     // ✅ Nytt: alltid instruktion istället för redirect
     show(
       "success",
-      "Konto skapat! Kolla din email och bekräfta länken. När det är klart kan du logga in."
+      "Konto skapat! Kolla din e-post och bekräfta länken. När det är klart kan du logga in."
     );
   } catch (err) {
     console.error("Unexpected signUp error:", err);
@@ -121,7 +121,7 @@ async function signIn() {
   const email = emailEl.value.trim();
   const password = passEl.value;
 
-  if (!email || !password) return show("error", "Fyll i email och lösenord.");
+  if (!email || !password) return show("error", "Fyll i e-post och lösenord.");
 
   setLoading(true);
   show("success", "Loggar in...");
@@ -138,7 +138,7 @@ async function signIn() {
     // ✅ Nytt: blockera om email inte verifierad
     if (!isEmailConfirmed(user)) {
       await supabase.auth.signOut();
-      return show("error", "Bekräfta din email först (kolla även skräppost), sen logga in igen.");
+      return show("error", "Bekräfta din e-post först (kolla även skräppost), sen logga in igen.");
     }
 
     // Login lyckades. Försök skapa profilrad (men stoppa inte redirect om den failar)
@@ -192,7 +192,7 @@ passEl?.addEventListener("keydown", (e) => {
   if (!isEmailConfirmed(session.user)) {
     // om någon sitter “halv-inloggad” utan confirm, logga ut och låt dem stanna
     await supabase.auth.signOut();
-    show("error", "Du måste bekräfta din email innan du kan fortsätta.");
+    show("error", "Du måste bekräfta din e-post innan du kan fortsätta.");
     return;
   }
 

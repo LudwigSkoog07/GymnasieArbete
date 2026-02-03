@@ -149,37 +149,11 @@ imagesEl?.addEventListener("change", (e) => {
 /* =========================
    Validation
 ========================= */
-function normalizeMapsUrl(raw) {
-  const v = (raw || "").trim();
-  if (!v) return "";
-
-  if (/^https?:\/\//i.test(v)) return v;
-
-  if (/^(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.|maps\.google\.)/i.test(v)) {
-    return `https://${v}`;
-  }
-
-  return v;
-}
-
-function isGoogleMapsUrl(raw) {
-  const v = (raw || "").trim();
-  if (!v) return false;
-
-  return (
-    /^https?:\/\/(www\.)?google\.[^/]+\/maps/i.test(v) ||
-    /^https?:\/\/maps\.google\.[^/]+/i.test(v) ||
-    /^https?:\/\/maps\.app\.goo\.gl\//i.test(v) ||
-    /^https?:\/\/goo\.gl\/maps\//i.test(v)
-  );
-}
-
 function validate() {
   clearErrors();
 
   const title = (titleEl?.value || "").trim();
-  const placeRaw = (placeEl?.value || "").trim();
-  const place = normalizeMapsUrl(placeRaw);
+  const place = (placeEl?.value || "").trim();
   const date = (dateEl?.value || "").trim(); // YYYY-MM-DD
 
   const startTime = (startTimeEl?.value || "").trim(); // HH:MM
@@ -189,12 +163,7 @@ function validate() {
   let ok = true;
 
   if (title.length < 3) { setFieldError(titleEl, "Skriv en titel (minst 3 tecken)."); ok = false; }
-  if (placeEl && placeRaw !== place) placeEl.value = place;
-
-  if (!isGoogleMapsUrl(place)) {
-    setFieldError(placeEl, "Klistra in en giltig Google Maps-lÃ¤nk.");
-    ok = false;
-  }
+  if (!place || place.length < 3) { setFieldError(placeEl, "Skriv en adress (minst 3 tecken)."); ok = false; }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { setFieldError(dateEl, "Välj ett giltigt datum."); ok = false; }
 
   if (!startTime || !/^\d{2}:\d{2}$/.test(startTime)) {
@@ -294,10 +263,10 @@ async function uploadImages(files, userId) {
 
       // 2) Ensure profile row exists so uploader name is available to feeds
       try {
-        const username = freshUser.email?.split("@")[0] || "User";
+        const username = freshUser.email?.split("@")[0] || "Användare";
         await supabase
           .from("profiles")
-          .upsert({ id: freshUser.id, username }, { onConflict: "id" });
+          .upsert({ id: freshUser.id, username }, { onConflict: "id", ignoreDuplicates: true });
       } catch (e) {
         console.warn("⚠️ Kunde inte upserta profile:", e?.message || e);
       }
@@ -314,12 +283,46 @@ async function uploadImages(files, userId) {
         image_urls: imageUrls      // alltid array ([])
       };
 
-      const { data: inserted, error } = await supabase
-        .from("events")
-        .insert([payload])
-        .select("id")
-        .single();
+      // Lägg till lat/lon om de finns (defensivt)
+      const latRaw = document.getElementById("placeLat")?.value || "";
+      const lonRaw = document.getElementById("placeLon")?.value || "";
+      const lat = Number.parseFloat(String(latRaw).trim());
+      const lon = Number.parseFloat(String(lonRaw).trim());
 
+      if (Number.isFinite(lat)) payload.place_lat = lat;
+      if (Number.isFinite(lon)) payload.place_lon = lon;
+
+      async function insertEventWithFallback(data) {
+        let res = await supabase
+          .from("events")
+          .insert([data])
+          .select("id")
+          .single();
+
+        if (!res.error) return res;
+
+        const msg = String(res.error?.message || "").toLowerCase();
+        const missingColumn =
+          res.error?.code === "42703" ||
+          msg.includes('column "place_lat"') ||
+          msg.includes('column "place_lon"') ||
+          msg.includes("place_lat") ||
+          msg.includes("place_lon");
+
+        if (!missingColumn) return res;
+
+        const fallback = { ...data };
+        delete fallback.place_lat;
+        delete fallback.place_lon;
+
+        return await supabase
+          .from("events")
+          .insert([fallback])
+          .select("id")
+          .single();
+      }
+
+      const { data: inserted, error } = await insertEventWithFallback(payload);
       if (error) throw error;
 
       const eventId = inserted.id;
