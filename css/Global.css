@@ -63,7 +63,7 @@
   --badge-admin: #F59E0B;
   --badge-admin-border: rgba(245,158,11,0.45);
 
-  --danger: var(--danger);
+  --danger: #DC2626;
   --danger-rgb: 220,38,38;
   --danger-soft: rgba(var(--danger-rgb),0.12);
   --danger-border: rgba(var(--danger-rgb),0.28);
