@@ -11,6 +11,11 @@ const filterPillsEl = document.getElementById("filterPills");
 const filterCountEl = document.getElementById("filterCount");
 const countEl2 = document.getElementById("eventsCount2");
 const emptyMsgEl = empty?.querySelector("p");
+const datePillsEl = document.getElementById("datePills");
+const sortSelectEl = document.getElementById("sortSelect");
+const clearFiltersBtn = document.getElementById("clearFilters");
+const detailsContentEl = document.getElementById("eventDetailsContent");
+const savedListEl = document.getElementById("savedList");
 
 /* =========================
    State
@@ -19,6 +24,10 @@ let currentUserId = null;
 let isCurrentUserAdmin = false;
 let allEvents = [];
 let activeCategory = "Alla";
+let activeDateRange = "Alla";
+let activeSort = "Senast";
+let selectedEventId = null;
+let savedEventIds = new Set();
 let adminProfiles = [];
 let adminUserSearch = "";
 let adminProfilesError = false;
@@ -43,6 +52,9 @@ const CATEGORY_OPTIONS = [
   "Föreläsning",
   "Natur & Friluftsliv"
 ];
+
+const DATE_OPTIONS = ["Alla", "Idag", "Denna vecka", "Helgen"];
+const SORT_OPTIONS = ["Senast", "Snart", "Populärast"];
 
 /* =========================
    Helpers (svenska)
@@ -306,6 +318,49 @@ function eventEndAsDate(ev) {
   return isNaN(dt.getTime()) ? null : dt;
 }
 
+function eventStartAsDate(ev) {
+  if (!ev?.date) return null;
+  const t = ev?.time ? fmtTime(ev.time) : "00:00";
+  const dateStr = typeof ev.date === "string" ? ev.date : new Date(ev.date).toISOString().slice(0, 10);
+  const dt = new Date(`${dateStr}T${t}:00`);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function endOfDay(d) {
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function weekStart(d) {
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const start = new Date(d);
+  start.setDate(d.getDate() + diff);
+  return startOfDay(start);
+}
+
+function weekEnd(d) {
+  const start = weekStart(d);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
+function weekendRange(d) {
+  const start = weekStart(d);
+  const saturday = new Date(start);
+  saturday.setDate(start.getDate() + 5);
+  const sunday = new Date(start);
+  sunday.setDate(start.getDate() + 6);
+  return { start: startOfDay(saturday), end: endOfDay(sunday) };
+}
+
 /* =========================
    Auth
 ========================= */
@@ -327,6 +382,46 @@ async function loadCurrentUser() {
     }
   }
 } 
+
+/* =========================
+   Sparade (localStorage)
+========================= */
+const SAVED_KEY = "he_saved_events";
+
+function loadSavedFromStorage() {
+  try {
+    const raw = localStorage.getItem(SAVED_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(list)) {
+      savedEventIds = new Set(list.map((id) => String(id)));
+    }
+  } catch (e) {
+    savedEventIds = new Set();
+  }
+}
+
+function persistSavedToStorage() {
+  try {
+    const list = Array.from(savedEventIds.values());
+    localStorage.setItem(SAVED_KEY, JSON.stringify(list));
+  } catch (e) {
+    // ignore
+  }
+}
+
+function isSavedEvent(id) {
+  return savedEventIds.has(String(id));
+}
+
+function toggleSavedEvent(id) {
+  const key = String(id);
+  if (savedEventIds.has(key)) {
+    savedEventIds.delete(key);
+  } else {
+    savedEventIds.add(key);
+  }
+  persistSavedToStorage();
+}
 
 /* =========================
    Attendees
@@ -394,6 +489,54 @@ async function setAttend(eventId, shouldAttend) {
       return false;
     }
     return true;
+  }
+}
+
+/* =========================
+   Rapportera
+========================= */
+async function reportEvent(eventId, reason) {
+  if (!currentUserId) {
+    alert("Du behöver vara inloggad för att rapportera.");
+    return false;
+  }
+
+  try {
+    const attempts = [
+      { event_id: eventId, reporter_id: currentUserId, reason: reason || null },
+      { event_id: eventId, user_id: currentUserId, reason: reason || null }
+    ];
+
+    let lastError = null;
+
+    for (const payload of attempts) {
+      const { error } = await supabase
+        .from("event_reports")
+        .insert([payload]);
+
+      if (!error) {
+        alert("Tack! Din rapport har skickats.");
+        return true;
+      }
+
+      lastError = error;
+      const msg = String(error?.message || "").toLowerCase();
+      const missingColumn =
+        error?.code === "42703" ||
+        msg.includes("reporter_id") ||
+        msg.includes("user_id");
+
+      if (!missingColumn) break;
+    }
+
+    if (lastError) {
+      console.warn("⚠️ Kunde inte rapportera:", lastError.message || lastError);
+    }
+    alert("Kunde inte skicka rapport. Funktionen är inte konfigurerad ännu.");
+    return false;
+  } catch (err) {
+    alert("Kunde inte skicka rapport.");
+    return false;
   }
 }
 
@@ -609,6 +752,29 @@ function updateAdminUsersView() {
   if (countEl) countEl.textContent = `${filtered.length} profiler`;
 }
 
+async function loadReports() {
+  const attempts = [
+    "id, event_id, reporter_id, reason, created_at, events:event_id ( title, user_id )",
+    "id, event_id, user_id, reason, created_at, events:event_id ( title, user_id )",
+    "id, event_id, reporter_id, reason, created_at",
+    "id, event_id, user_id, reason, created_at"
+  ];
+
+  let lastError = null;
+
+  for (const fields of attempts) {
+    const res = await supabase
+      .from("event_reports")
+      .select(fields)
+      .order("created_at", { ascending: false });
+
+    if (!res.error) return res;
+    lastError = res.error;
+  }
+
+  return { error: lastError };
+}
+
 /* =========================
    Admin panel (modal + loader)
 ========================= */
@@ -691,19 +857,58 @@ function ensureAdminModal() {
       return;
     }
 
-    if (action === "admin-delete-event") {
-      const id = actionBtn?.dataset?.id;
-      if (!id) return;
-      if (!confirm('Vill du verkligen ta bort denna händelse?')) return;
-      try {
-        const { error } = await supabase.from("events").delete().eq("id", id);
-        if (error) { alert("Kunde inte ta bort: " + (error.message || error)); return; }
-        await loadAdminPanel();
-      } catch (err) {
-        alert("Kunde inte ta bort: " + (err?.message || err));
+      if (action === "admin-delete-event") {
+        const id = actionBtn?.dataset?.id;
+        if (!id) return;
+        if (!confirm('Vill du verkligen ta bort denna händelse?')) return;
+        try {
+          const { error } = await supabase.from("events").delete().eq("id", id);
+          if (error) { alert("Kunde inte ta bort: " + (error.message || error)); return; }
+          await loadAdminPanel();
+        } catch (err) {
+          alert("Kunde inte ta bort: " + (err?.message || err));
+        }
+        return;
       }
-      return;
-    }
+
+      if (action === "admin-accept-report") {
+        const id = actionBtn?.dataset?.id;
+        const eventId = actionBtn?.dataset?.eventId || "";
+        if (!id) return;
+        if (!confirm('Acceptera rapport? Eventet tas bort.')) return;
+        try {
+          if (eventId) {
+            const delEvent = await supabase.from("events").delete().eq("id", eventId);
+            if (delEvent.error) {
+              alert("Kunde inte ta bort eventet: " + (delEvent.error.message || delEvent.error));
+              return;
+            }
+          }
+          const delReport = await supabase.from("event_reports").delete().eq("id", id);
+          if (delReport.error) {
+            alert("Kunde inte ta bort rapport: " + (delReport.error.message || delReport.error));
+            return;
+          }
+          await loadAdminPanel();
+        } catch (err) {
+          alert("Kunde inte uppdatera: " + (err?.message || err));
+        }
+        return;
+      }
+
+      if (action === "admin-deny-report") {
+        const id = actionBtn?.dataset?.id;
+        if (!id) return;
+        if (!confirm('Neka rapport? Eventet behålls och rapporten tas bort.')) return;
+        try {
+          const { error } = await supabase.from("event_reports").delete().eq("id", id);
+          if (error) { alert("Kunde inte ta bort rapport: " + (error.message || error)); return; }
+          await loadAdminPanel();
+        } catch (err) {
+          alert("Kunde inte uppdatera: " + (err?.message || err));
+        }
+        return;
+      }
 
     if (action === "admin-toggle-admin") {
       const id = actionBtn?.dataset?.id;
@@ -811,22 +1016,55 @@ async function loadAdminProfiles() {
 async function loadAdminPanel() {
   openAdminModal('<p>Laddar adminpanelen...</p>');
 
-  try {
-    const evRes = await loadEventsWithJoin();
-    const profilesRes = await loadAdminProfiles();
+    try {
+      const evRes = await loadEventsWithJoin();
+      const profilesRes = await loadAdminProfiles();
+      const reportsRes = await loadReports();
 
-    const events = evRes.error ? (await loadEventsNoJoin()).data || [] : evRes.data || [];
-    const profiles = profilesRes.error ? [] : profilesRes.data || [];
-    adminProfiles = profiles;
-    adminProfilesError = !!profilesRes.error;
+      const events = evRes.error ? (await loadEventsNoJoin()).data || [] : evRes.data || [];
+      const profiles = profilesRes.error ? [] : profilesRes.data || [];
+      adminProfiles = profiles;
+      adminProfilesError = !!profilesRes.error;
 
-    const eventsHtml = events.map(ev => {
-      const author = authorNameFromProfile(ev.profiles, 'Användare');
-      return `<li class="admin-event" style="padding:8px;border-bottom:1px solid #eee;">
-        <strong>${ev.title || '(utan titel)'}</strong> — ${author} — ${fmtDateSv(ev.date)} 
-        <button data-action="admin-delete-event" data-id="${ev.id}" style="margin-left:8px;">🗑️ Ta bort</button>
-      </li>`;
-    }).join('');
+      const reports = reportsRes.error ? [] : reportsRes.data || [];
+      const reportsErrorMsg = String(reportsRes.error?.message || "").toLowerCase();
+      const reportsMissing =
+        reportsRes.error &&
+        (reportsRes.error?.code === "42P01" || reportsErrorMsg.includes("event_reports"));
+
+      const eventsHtml = events.map(ev => {
+        const author = authorNameFromProfile(ev.profiles, 'Användare');
+        return `<li class="admin-event" style="padding:8px;border-bottom:1px solid #eee;">
+          <strong>${ev.title || '(utan titel)'}</strong> — ${author} — ${fmtDateSv(ev.date)} 
+          <button data-action="admin-delete-event" data-id="${ev.id}" style="margin-left:8px;">🗑️ Ta bort</button>
+        </li>`;
+      }).join('');
+
+      const reportsHtml = reportsRes.error
+        ? `<li class="admin-empty">${reportsMissing ? "Rapport-funktionen är inte konfigurerad." : "Kunde inte ladda rapporter."}</li>`
+        : (reports.length ? reports.map((rep) => {
+            const title = rep?.events?.title || rep?.event_id || "Okänt event";
+            const reason = rep?.reason ? safeText(rep.reason) : "Ingen orsak angiven.";
+            const created = rep?.created_at ? fmtDateSv(rep.created_at) : "";
+            const reporterRaw = rep?.reporter_id || rep?.user_id || "";
+            const reporter = reporterRaw ? safeText(reporterRaw) : "Okänd";
+            const eventId = rep?.event_id ? safeText(rep.event_id) : "Okänd";
+            return `
+              <li class="admin-report">
+                <div class="admin-report-title">${safeText(title)}</div>
+                <div class="admin-report-meta">
+                  <span>Rapportör: <code>${reporter}</code></span>
+                  <span>Event-ID: <code>${eventId}</code></span>
+                  ${created ? `<span>${created}</span>` : ""}
+                </div>
+                <div class="admin-report-reason">${reason}</div>
+                <div class="admin-report-actions">
+                  <button class="admin-action-btn" data-action="admin-accept-report" data-id="${rep.id}" data-event-id="${rep.event_id || ""}">Acceptera (ta bort event)</button>
+                  <button class="admin-action-btn ghost" data-action="admin-deny-report" data-id="${rep.id}">Neka (behåll event)</button>
+                </div>
+              </li>
+            `;
+          }).join('') : `<li class="admin-empty">Inga rapporter.</li>`);
 
     const filteredProfiles = filterProfilesBySearch(profiles, adminUserSearch);
     const usersHtml = renderAdminUsersList(
@@ -842,14 +1080,18 @@ async function loadAdminPanel() {
         </div>
         <div><button class="admin-action-btn" data-action="refresh-admin">Uppdatera</button></div>
       </div>
-      <div class="admin-tabs">
-        <button class="admin-tab-btn is-on" data-tab="events">Händelser</button>
-        <button class="admin-tab-btn" data-tab="users">Profiler</button>
-      </div>
-      <div data-admin-tab="events">
-        <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga händelser</li>'}</ul>
-      </div>
-      <div data-admin-tab="users" hidden>
+        <div class="admin-tabs">
+          <button class="admin-tab-btn is-on" data-tab="events">Händelser</button>
+          <button class="admin-tab-btn" data-tab="reports">Rapporter</button>
+          <button class="admin-tab-btn" data-tab="users">Profiler</button>
+        </div>
+        <div data-admin-tab="events">
+          <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga händelser</li>'}</ul>
+        </div>
+        <div data-admin-tab="reports" hidden>
+          <ul class="admin-reports">${reportsHtml}</ul>
+        </div>
+        <div data-admin-tab="users" hidden>
         <div class="admin-user-toolbar">
           <input
             id="adminUserSearch"
@@ -1134,11 +1376,154 @@ function renderList(list, emptyLabel = "") {
         : `Inga händelser i kategorin “${activeCategory}”.`);
     }
     if (empty) empty.hidden = false;
+    updateSavedList();
     return;
   }
 
   if (empty) empty.hidden = true;
   if (grid) grid.innerHTML = list.map(renderEvent).join("");
+  updateCardStates();
+  updateSavedList();
+}
+
+function updateCardStates() {
+  if (!grid) return;
+  const selectedId = selectedEventId ? String(selectedEventId) : "";
+  grid.querySelectorAll(".event-card").forEach((card) => {
+    const id = String(card.dataset.eventId || "");
+    card.classList.toggle("is-selected", !!selectedId && id === selectedId);
+    card.classList.toggle("is-saved", isSavedEvent(id));
+  });
+}
+
+function updateSavedList() {
+  if (!savedListEl) return;
+
+  const savedEvents = [];
+  const presentIds = new Set();
+  for (const ev of allEvents || []) {
+    if (isSavedEvent(ev.id)) {
+      savedEvents.push(ev);
+      presentIds.add(String(ev.id));
+    }
+  }
+
+  if (presentIds.size !== savedEventIds.size) {
+    savedEventIds = new Set([...presentIds]);
+    persistSavedToStorage();
+  }
+
+  if (!savedEvents.length) {
+    savedListEl.innerHTML = `<li class="saved-empty">Inga sparade ännu.</li>`;
+    return;
+  }
+
+  savedListEl.innerHTML = savedEvents.map((ev) => {
+    const dateText = fmtDateSv(ev.date);
+    const endResolved = resolveEndTime(ev);
+    const timeRange = ev.time
+      ? (endResolved && endResolved !== "sent"
+          ? `${fmtTime(ev.time)}–${fmtTime(endResolved)}`
+          : (endResolved === "sent" ? `${fmtTime(ev.time)} • Sent` : fmtTime(ev.time)))
+      : "";
+    const meta = [dateText, timeRange].filter(Boolean).join(" • ");
+    return `
+      <li class="saved-item" data-event-id="${ev.id}">
+        <button class="saved-open" type="button" data-action="open-saved">${safeText(ev.title || "Utan titel")}</button>
+        <div class="saved-meta">
+          <span>${safeText(meta || "Ingen tid angiven")}</span>
+          <button class="saved-remove" type="button" data-action="remove-saved">Ta bort</button>
+        </div>
+      </li>
+    `;
+  }).join("");
+}
+
+function buildDetailsMarkup(ev) {
+  if (!ev) return `<p class="details-empty">Välj ett event i listan för att se mer här.</p>`;
+
+  const imgs = ev.image_urls || [];
+  const firstImg = imgs.length ? imgs[0] : null;
+  const titleSafe = safeText(ev.title || "Utan titel");
+  const dateText = fmtDateSv(ev.date) || "";
+  const endResolved = resolveEndTime(ev);
+  const timeRange = ev.time
+    ? (endResolved && endResolved !== "sent"
+        ? `${fmtTime(ev.time)}–${fmtTime(endResolved)}`
+        : (endResolved === "sent" ? `${fmtTime(ev.time)} • Sent` : fmtTime(ev.time)))
+    : "";
+  const placeMeta = buildPlaceMeta(ev.place);
+  const categoryLabel = normalizeCategory(ev.category);
+  const categorySafe = safeText(categoryLabel);
+  const priceLabel = formatPriceLabel(ev.price);
+  const priceSafe = safeText(priceLabel);
+  const freePrice = isFreePrice(ev.price);
+  const authorName = authorNameFromProfile(ev.profiles, "Användare");
+  const authorSafe = safeText(authorName);
+  const authorProfileHref = ev.user_id ? `html/Profil.html?uid=${encodeURIComponent(ev.user_id)}` : "";
+  const desc = String(ev.info || "").trim();
+  const descSafe = safeText(desc);
+  const isSaved = isSavedEvent(ev.id);
+
+  return `
+    ${firstImg ? `
+      <div class="details-hero">
+        <img src="${firstImg}" alt="${titleSafe}" loading="lazy">
+      </div>
+    ` : `
+      <div class="details-hero">
+        <div class="event-media-placeholder">Ingen bild</div>
+      </div>
+    `}
+
+    <div class="details-badges">
+      ${categoryLabel ? `<span class="event-badge cat" data-category="${categoryLabel}">${categorySafe}</span>` : ""}
+      ${priceLabel ? `<span class="event-badge price ${freePrice ? "is-free" : ""}">${priceSafe}</span>` : ""}
+    </div>
+
+    <h3 class="details-title">${titleSafe}</h3>
+
+    <div class="details-meta">
+      ${dateText ? `<div>Datum: ${dateText}</div>` : ""}
+      ${timeRange ? `<div>Tid: ${timeRange}</div>` : ""}
+      ${placeMeta.label ? `<div>Plats: <a href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">${safeText(placeMeta.label)}</a></div>` : ""}
+      <div>Skapare: ${authorProfileHref ? `<a href="${authorProfileHref}">${authorSafe}</a>` : authorSafe}</div>
+    </div>
+
+    ${desc ? `<p class="details-desc">${descSafe}</p>` : ""}
+
+    <div class="details-actions">
+      <button class="details-btn" data-action="details-save" data-id="${ev.id}">
+        ${isSaved ? "Ta bort" : "Spara"}
+      </button>
+      ${placeMeta.label ? `<a class="details-btn ghost" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">Öppna karta</a>` : ""}
+      <button class="details-btn danger" data-action="details-report" data-id="${ev.id}">Rapportera</button>
+    </div>
+  `;
+}
+
+function setSelectedEvent(ev) {
+  selectedEventId = ev ? String(ev.id) : null;
+  if (detailsContentEl) {
+    detailsContentEl.dataset.eventId = selectedEventId || "";
+    detailsContentEl.innerHTML = buildDetailsMarkup(ev);
+  }
+  updateCardStates();
+}
+
+function syncSelectedEvent() {
+  if (!selectedEventId) {
+    if (detailsContentEl && !detailsContentEl.innerHTML.trim()) {
+      detailsContentEl.innerHTML = buildDetailsMarkup(null);
+    }
+    return;
+  }
+  const ev = allEvents.find((item) => String(item.id) === String(selectedEventId));
+  if (!ev) {
+    setSelectedEvent(null);
+    return;
+  }
+  setSelectedEvent(ev);
 }
 
 function renderFilters() {
@@ -1146,6 +1531,15 @@ function renderFilters() {
   filterPillsEl.innerHTML = CATEGORY_OPTIONS.map((cat) => `
     <button class="filter-pill ${cat === activeCategory ? "is-active" : ""}" data-category="${cat}" type="button">
       ${cat}
+    </button>
+  `).join("");
+}
+
+function renderDateFilters() {
+  if (!datePillsEl) return;
+  datePillsEl.innerHTML = DATE_OPTIONS.map((range) => `
+    <button class="filter-pill ${range === activeDateRange ? "is-active" : ""}" data-date="${range}" type="button">
+      ${range}
     </button>
   `).join("");
 }
@@ -1161,10 +1555,93 @@ function setActiveCategory(cat) {
   applyFilters();
 }
 
+function setActiveDateRange(range) {
+  if (!DATE_OPTIONS.includes(range)) range = "Alla";
+  activeDateRange = range;
+  if (datePillsEl) {
+    datePillsEl.querySelectorAll(".filter-pill").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.date === activeDateRange);
+    });
+  }
+  applyFilters();
+}
+
+function setActiveSort(sort) {
+  if (!SORT_OPTIONS.includes(sort)) sort = "Senast";
+  activeSort = sort;
+  if (sortSelectEl) sortSelectEl.value = activeSort;
+  applyFilters();
+}
+
+function resetFilters() {
+  activeCategory = "Alla";
+  activeDateRange = "Alla";
+  activeSort = "Senast";
+  renderFilters();
+  renderDateFilters();
+  if (sortSelectEl) sortSelectEl.value = activeSort;
+  applyFilters();
+}
+
+function filterByDate(list) {
+  if (activeDateRange === "Alla") return list;
+  const now = new Date();
+  let range = null;
+
+  if (activeDateRange === "Idag") {
+    range = { start: startOfDay(now), end: endOfDay(now) };
+  } else if (activeDateRange === "Denna vecka") {
+    range = { start: weekStart(now), end: weekEnd(now) };
+  } else if (activeDateRange === "Helgen") {
+    range = weekendRange(now);
+  }
+
+  if (!range) return list;
+
+  return (list || []).filter((ev) => {
+    const dt = eventStartAsDate(ev);
+    if (!dt) return false;
+    return dt >= range.start && dt <= range.end;
+  });
+}
+
+function sortEvents(list) {
+  const sorted = [...(list || [])];
+
+  if (activeSort === "Populärast") {
+    sorted.sort((a, b) => {
+      const diff = (b.att_count || 0) - (a.att_count || 0);
+      if (diff !== 0) return diff;
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
+    return sorted;
+  }
+
+  if (activeSort === "Snart") {
+    sorted.sort((a, b) => {
+      const aDate = eventStartAsDate(a);
+      const bDate = eventStartAsDate(b);
+      if (!aDate && !bDate) return 0;
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      const diff = aDate.getTime() - bDate.getTime();
+      if (diff !== 0) return diff;
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+    });
+    return sorted;
+  }
+
+  sorted.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  return sorted;
+}
+
 function applyFilters() {
-  const list = activeCategory === "Alla"
+  let list = activeCategory === "Alla"
     ? allEvents
     : allEvents.filter((ev) => normalizeCategory(ev.category) === activeCategory);
+
+  list = filterByDate(list);
+  list = sortEvents(list);
   renderList(list);
 }
 
@@ -1242,6 +1719,7 @@ async function loadEvents() {
 
   allEvents = list;
   applyFilters();
+  syncSelectedEvent();
 }
 
 /* =========================
@@ -1252,11 +1730,16 @@ function wireEvents() {
 
   grid.addEventListener("click", async (e) => {
     const actionBtn = e.target.closest("[data-action]");
-    if (!actionBtn) return;
-
     const card = e.target.closest(".event-card");
     const eventId = card?.dataset?.eventId;
-    if (!eventId) return;
+    if (!card || !eventId) return;
+
+    if (!actionBtn) {
+      if (e.target.closest("a, button")) return;
+      const ev = allEvents.find((item) => String(item.id) === String(eventId));
+      if (ev) setSelectedEvent(ev);
+      return;
+    }
 
     const action = actionBtn.dataset.action;
 
@@ -1330,6 +1813,9 @@ function wireEvents() {
       const newCount = counts.get(eventId) || 0;
       const countSpan = card.querySelector(".attend-count");
       if (countSpan) countSpan.innerHTML = `${ICONS.users}<span>${fmtKommer(newCount)}</span>`;
+      const targetEvent = allEvents.find((ev) => String(ev.id) === String(eventId));
+      if (targetEvent) targetEvent.att_count = newCount;
+      if (activeSort === "Populärast") applyFilters();
 
       if (isOwner && nowOn) {
         actionBtn.disabled = true;
@@ -1350,6 +1836,12 @@ function wireEvents() {
           return;
         }
         allEvents = (allEvents || []).filter((e) => String(e.id) !== String(eventId));
+        if (selectedEventId === String(eventId)) {
+          setSelectedEvent(null);
+        }
+        if (isSavedEvent(eventId)) {
+          toggleSavedEvent(eventId);
+        }
         applyFilters();
       } catch (err) {
         alert("Kunde inte ta bort: " + (err?.message || err));
@@ -1391,15 +1883,106 @@ function wireFilters() {
   });
 }
 
+function wireDateFilters() {
+  if (!datePillsEl) return;
+  datePillsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-pill");
+    if (!btn) return;
+    setActiveDateRange(btn.dataset.date || "Alla");
+  });
+}
+
+function wireSort() {
+  if (!sortSelectEl) return;
+  sortSelectEl.addEventListener("change", () => {
+    setActiveSort(sortSelectEl.value || "Senast");
+  });
+}
+
+function wireClearFilters() {
+  if (!clearFiltersBtn) return;
+  clearFiltersBtn.addEventListener("click", () => {
+    resetFilters();
+  });
+}
+
+function wireDetailsActions() {
+  if (!detailsContentEl) return;
+
+  detailsContentEl.addEventListener("click", async (e) => {
+    const actionBtn = e.target.closest("[data-action]");
+    if (!actionBtn) return;
+
+    const action = actionBtn.dataset.action;
+    const id = actionBtn.dataset.id;
+    if (!id) return;
+
+    if (action === "details-save") {
+      toggleSavedEvent(id);
+      updateSavedList();
+      updateCardStates();
+      const ev = allEvents.find((item) => String(item.id) === String(id));
+      if (ev) setSelectedEvent(ev);
+      return;
+    }
+
+    if (action === "details-report") {
+      const reason = prompt("Vad vill du rapportera? (kort beskrivning)");
+      const clean = reason ? reason.trim() : "";
+      if (!clean) return;
+      await reportEvent(id, clean);
+      return;
+    }
+  });
+}
+
+function wireSavedList() {
+  if (!savedListEl) return;
+
+  savedListEl.addEventListener("click", (e) => {
+    const actionBtn = e.target.closest("[data-action]");
+    const item = e.target.closest(".saved-item");
+    const eventId = item?.dataset?.eventId;
+    if (!eventId) return;
+
+    if (actionBtn?.dataset?.action === "remove-saved") {
+      toggleSavedEvent(eventId);
+      updateSavedList();
+      updateCardStates();
+      if (selectedEventId === String(eventId)) {
+        const ev = allEvents.find((item) => String(item.id) === String(eventId));
+        if (ev) setSelectedEvent(ev);
+        else setSelectedEvent(null);
+      }
+      return;
+    }
+
+    const ev = allEvents.find((item) => String(item.id) === String(eventId));
+    if (ev) {
+      setSelectedEvent(ev);
+      const card = grid?.querySelector(`.event-card[data-event-id="${String(eventId)}"]`);
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+}
+
 /* =========================
    Boot
 ========================= */
 (async () => {
   await loadCurrentUser();
+  loadSavedFromStorage();
   ensureAttendeesModal();
   ensureAdminToggle();
   renderFilters();
+  renderDateFilters();
+  if (sortSelectEl) sortSelectEl.value = activeSort;
   wireFilters();
+  wireDateFilters();
+  wireSort();
+  wireClearFilters();
+  wireDetailsActions();
+  wireSavedList();
   wireEvents();
   loadEvents();
 })();

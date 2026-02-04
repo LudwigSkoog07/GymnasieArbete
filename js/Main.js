@@ -74,3 +74,19 @@ if (profileMenus.length) {
     if (e.key === "Escape") closeAllMenus();
   });
 }
+
+const backToTop = document.getElementById("backToTop");
+
+if (backToTop) {
+  const toggleVisibility = () => {
+    const shouldShow = window.scrollY > 280;
+    backToTop.hidden = !shouldShow;
+  };
+
+  window.addEventListener("scroll", toggleVisibility, { passive: true });
+  toggleVisibility();
+
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}

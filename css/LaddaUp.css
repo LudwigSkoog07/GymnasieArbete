@@ -34,8 +34,8 @@
   border-radius: 18px;
 
   /* FB blue + subtle glass */
-  background: linear-gradient(180deg, rgba(24,119,242,0.98), rgba(24,119,242,0.78));
-  box-shadow: 0 18px 36px rgba(24,119,242,0.18), 0 16px 36px rgba(15,23,42,0.10);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 18px 36px var(--accent-soft-2), 0 16px 36px rgba(15,23,42,0.10);
   position: relative;
   overflow:hidden;
 
@@ -147,7 +147,7 @@ label{
 }
 
 .req{
-  color: #1877f2;
+  color: var(--accent);
   font-weight: 950;
   margin-left: 4px;
 }
@@ -237,7 +237,7 @@ textarea::placeholder{
 }
 
 .pill-option input:focus-visible + span{
-  outline: 3px solid rgba(24,119,242,0.28);
+  outline: 3px solid var(--accent-ring);
   outline-offset: 2px;
 }
 
@@ -253,7 +253,7 @@ textarea::placeholder{
 }
 .pill-option[data-category="Sport & Motion"]{
   --pill-bg: rgba(191,219,254,0.9);
-  --pill-text: #1d4ed8;
+  --pill-text: var(--accent-strong);
   --pill-border: rgba(29,78,216,0.22);
 }
 .pill-option[data-category="Mat & Dryck"]{
@@ -285,8 +285,8 @@ textarea::placeholder{
 /* Focus */
 input:focus,
 textarea:focus{
-  border-color: rgba(24,119,242,0.35);
-  box-shadow: 0 0 0 5px rgba(24,119,242,0.14), 0 16px 34px rgba(15,23,42,0.10);
+  border-color: var(--accent-border-3);
+  box-shadow: 0 0 0 5px var(--accent-soft-2), 0 16px 34px rgba(15,23,42,0.10);
   background: var(--surface-stronger);
   transform: translateY(-1px);
 }
@@ -294,14 +294,14 @@ textarea:focus{
 /* Validation */
 .field input.is-invalid,
 .field textarea.is-invalid{
-  border-color: rgba(220,38,38,0.40);
-  box-shadow: 0 0 0 5px rgba(220,38,38,0.12), 0 16px 34px rgba(15,23,42,0.10);
+  border-color: var(--danger-border-strong);
+  box-shadow: 0 0 0 5px var(--danger-soft), 0 16px 34px rgba(15,23,42,0.10);
 }
 
 .pill-group.is-invalid,
 .upload-box.is-invalid{
-  border-color: rgba(220,38,38,0.45);
-  box-shadow: 0 0 0 4px rgba(220,38,38,0.12);
+  border-color: var(--danger-border-strong);
+  box-shadow: 0 0 0 4px var(--danger-soft);
 }
 
 /* Status message */
@@ -311,8 +311,8 @@ textarea:focus{
   font-weight: 850;
   color: var(--text-muted);
 }
-.form-msg.is-success{ color: rgba(16,185,129,0.95); }
-.form-msg.is-error{ color: rgba(220,38,38,0.95); }
+.form-msg.is-success{ color: var(--success); }
+.form-msg.is-error{ color: var(--danger); }
 
 /* =========================
    Actions
@@ -333,14 +333,14 @@ button.primary{
   padding: 0 18px;
   border-radius: 14px;
 
-  background: #1877f2;
+  background: var(--accent);
   color: #fff;
 
   font-weight: 950;
   letter-spacing: -0.01em;
   min-width: 200px;
 
-  box-shadow: 0 18px 36px rgba(24,119,242,0.22), 0 16px 34px rgba(15,23,42,0.12);
+  box-shadow: 0 18px 36px var(--accent-shadow), 0 16px 34px rgba(15,23,42,0.12);
   transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
               filter 160ms ease,
               box-shadow 180ms ease;
@@ -360,7 +360,7 @@ button.primary::before{
 button.primary:hover{
   transform: translateY(-3px);
   filter: brightness(0.98);
-  box-shadow: 0 22px 44px rgba(24,119,242,0.26), 0 18px 44px rgba(15,23,42,0.14);
+  box-shadow: 0 22px 44px var(--accent-shadow-strong), 0 18px 44px rgba(15,23,42,0.14);
 }
 button.primary:hover::before{
   transform: rotate(12deg) translateX(18%);
@@ -423,7 +423,7 @@ button.primary:disabled{
 }
 
 .maps-open{
-  color: #1877f2;
+  color: var(--accent);
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -488,7 +488,7 @@ button.primary:disabled{
 }
 
 .toggle input:checked + .toggle-ui{
-  background: rgba(24,119,242,0.55);
+  background: var(--accent-strong-soft);
 }
 .toggle input:checked + .toggle-ui::after{
   transform: translateX(18px);
@@ -591,7 +591,7 @@ button.primary:disabled{
 
 .img-remove:hover{
   transform: scale(1.12);
-  background: rgba(220,38,38,0.85);
+  background: var(--danger);
 }
 
 .img-remove:active{
@@ -640,9 +640,12 @@ button.primary:disabled{
 }
 
 .autocomplete-item.is-active{
-  background: rgba(24,119,242,0.12);
+  background: var(--accent-soft);
 }
 
 @media (max-width: 520px){
   .autocomplete-list{ max-height: 45vh; }
 }
+
+
+

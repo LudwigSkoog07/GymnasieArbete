@@ -46,9 +46,9 @@
   display:grid;
   place-items:center;
 
-  background: rgba(24,119,242,0.12);
-  border: 1px solid rgba(24,119,242,0.18);
-  color: rgba(24,119,242,0.95);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-2);
+  color: var(--accent);
   box-shadow: 0 12px 22px rgba(15,23,42,0.10);
 
   position: relative;
@@ -110,12 +110,12 @@
   height: 44px;
   padding: 0 14px;
   border-radius: 14px;
-  background: #1877f2;
+  background: var(--accent);
   color: #fff;
   font-weight: 900;
   font-size: 14px;
   text-decoration:none;
-  box-shadow: 0 18px 36px rgba(24,119,242,0.20), 0 14px 30px rgba(15,23,42,0.10);
+  box-shadow: 0 18px 36px var(--accent-shadow), 0 14px 30px rgba(15,23,42,0.10);
   transition: transform 160ms cubic-bezier(.2,1.1,.2,1), filter 160ms ease;
 }
 
@@ -187,8 +187,8 @@
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(24,119,242,0.10);
-  border: 1px solid rgba(24,119,242,0.18);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-2);
 }
 
 /* Pen button */
@@ -219,8 +219,8 @@
 
 .icon-pill:hover{
   transform: translateY(-1px);
-  background: rgba(24,119,242,0.10);
-  border-color: rgba(24,119,242,0.22);
+  background: var(--accent-soft);
+  border-color: var(--accent-shadow);
   box-shadow: 0 10px 20px rgba(15,23,42,0.08);
 }
 
@@ -250,8 +250,8 @@
 }
 
 .name-input:focus{
-  border-color: rgba(24,119,242,0.35);
-  box-shadow: 0 0 0 5px rgba(24,119,242,0.14);
+  border-color: var(--accent-border-3);
+  box-shadow: 0 0 0 5px var(--accent-soft-2);
   transform: translateY(-1px);
 }
 
@@ -282,9 +282,9 @@
 .mini-btn:active{ transform: translateY(0); }
 
 .mini-btn.primary{
-  background: #1877f2;
+  background: var(--accent);
   color: #fff;
-  border-color: rgba(24,119,242,0.35);
+  border-color: var(--accent-border-3);
 }
 
 .name-hint{
@@ -329,8 +329,8 @@
 
 .profil-box:focus{
   background: var(--surface-stronger);
-  border-color: rgba(24,119,242,0.35);
-  box-shadow: 0 0 0 5px rgba(24,119,242,0.14), 0 16px 34px rgba(15,23,42,0.10);
+  border-color: var(--accent-border-3);
+  box-shadow: 0 0 0 5px var(--accent-soft-2), 0 16px 34px rgba(15,23,42,0.10);
   transform: translateY(-1px);
 }
 
@@ -459,8 +459,8 @@
   height: 34px;
   padding: 0 10px;
   border-radius: 12px;
-  border: 1px solid rgba(239,68,68,0.28);
-  background: rgba(239,68,68,0.10);
+  border: 1px solid var(--danger-border);
+  background: var(--danger-soft);
   color: rgba(185,28,28,0.95);
   font-weight: 950;
   font-size: 12px;
@@ -473,8 +473,8 @@
 
 .my-del:hover{
   transform: translateY(-1px);
-  background: rgba(239,68,68,0.14);
-  border-color: rgba(239,68,68,0.38);
+  background: var(--danger-soft);
+  border-color: var(--danger-border-strong);
   box-shadow: 0 10px 18px rgba(15,23,42,0.08);
 }
 
@@ -484,3 +484,6 @@
   transform: none;
   box-shadow: none;
 }
+
+
+

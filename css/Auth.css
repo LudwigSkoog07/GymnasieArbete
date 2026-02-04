@@ -87,8 +87,8 @@
 }
 
 .auth-field input:focus {
-  border-color: rgba(24,119,242,0.35);
-  box-shadow: 0 0 0 5px rgba(24,119,242,0.14);
+  border-color: var(--accent-border-3);
+  box-shadow: 0 0 0 5px var(--accent-soft-2);
   transform: translateY(-1px);
 }
 
@@ -112,9 +112,9 @@
 }
 
 .auth-btn.primary {
-  background: #1877f2;
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 18px 34px rgba(24,119,242,0.20);
+  box-shadow: 0 18px 34px var(--accent-shadow);
 }
 
 .auth-btn.ghost {
@@ -138,5 +138,8 @@
   font-size: 13px;
 }
 
-.auth-msg.ok { color: rgba(22,163,74,0.95); }
-.auth-msg.err { color: rgba(220,38,38,0.95); }
+.auth-msg.ok { color: var(--success); }
+.auth-msg.err { color: var(--danger); }
+
+
+

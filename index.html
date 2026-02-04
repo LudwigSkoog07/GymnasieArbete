@@ -166,7 +166,36 @@
             </div>
             <div class="filter-count" id="filterCount">0 händelser</div>
           </div>
-          <div class="filter-pills" id="filterPills"></div>
+
+          <div class="filter-controls">
+            <div class="filter-row">
+              <div class="filter-group">
+                <div class="filter-label">Sortera</div>
+                <div class="filter-select">
+                  <select id="sortSelect" aria-label="Sortera händelser">
+                    <option value="Senast">Senast</option>
+                    <option value="Snart">Snart</option>
+                    <option value="Populärast">Populärast</option>
+                  </select>
+                </div>
+              </div>
+              <button class="filter-clear" id="clearFilters" type="button">Rensa filter</button>
+            </div>
+
+            <div class="filter-row">
+              <div class="filter-group">
+                <div class="filter-label">Datum</div>
+                <div class="filter-pills date-pills" id="datePills"></div>
+              </div>
+            </div>
+
+            <div class="filter-row">
+              <div class="filter-group">
+                <div class="filter-label">Kategori</div>
+                <div class="filter-pills" id="filterPills"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Events -->
@@ -192,6 +221,20 @@
           <p class="muted">
             Ett enkelt flöde för lokala händelser i Höganäs.
           </p>
+        </div>
+
+        <div class="glass card pad details-card" id="eventDetailsCard">
+          <div class="card-title">Eventdetaljer</div>
+          <div class="details-content" id="eventDetailsContent">
+            <p class="details-empty">Välj ett event i listan för att se mer här.</p>
+          </div>
+        </div>
+
+        <div class="glass card pad saved-card" id="savedCard">
+          <div class="card-title">Sparade</div>
+          <ul class="saved-list" id="savedList">
+            <li class="saved-empty">Inga sparade ännu.</li>
+          </ul>
         </div>
         
         <div class="glass card pad">
@@ -220,6 +263,8 @@
     </p>
     <button id="cookieAccept" type="button">Acceptera</button>
   </div>
+
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Till toppen" hidden>Upp</button>
 
   <!-- JS -->
   <script src="js/Main.js"></script>
