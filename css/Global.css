@@ -730,6 +730,10 @@ body::after{
   -webkit-backdrop-filter: blur(10px);
 }
 
+.cookie-banner[hidden]{
+  display: none !important;
+}
+
 .cookie-banner p{
   margin: 0;
   font-size: 13px;
