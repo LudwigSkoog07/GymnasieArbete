@@ -27,6 +27,9 @@ const avatarInput = document.getElementById("avatarInput");
 const avatarFallback = document.getElementById("avatarFallback");
 
 const logoutBtn = document.getElementById("logoutBtn");
+const eventsTitleEl = document.getElementById("profileEventsTitle");
+const uploadEventBtn = document.getElementById("profileUploadBtn");
+const profileControlsEl = document.getElementById("profileControls");
 
 // Username edit UI
 const editNameBtn = document.getElementById("editNameBtn");
@@ -61,6 +64,13 @@ function validUsername(s) {
   const v = (s || "").trim();
   if (v.length < 3 || v.length > 22) return false;
   return /^[a-zA-Z0-9._-]+$/.test(v);
+}
+
+function getViewUserId() {
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get("uid") || params.get("user") || "";
+  const trimmed = uid.trim();
+  return trimmed || null;
 }
 
 function normalizeMapsUrl(raw) {
@@ -203,27 +213,33 @@ function applyProfileBadge(flags) {
   badgeEl.setAttribute("aria-label", label);
 }
 
+function setReadOnlyUI() {
+  document.body?.classList.add("is-readonly");
+
+  if (editNameBtn) editNameBtn.style.display = "none";
+  if (nameEditor) nameEditor.hidden = true;
+  if (nameInput) nameInput.disabled = true;
+  if (nameHint) nameHint.textContent = "";
+
+  if (profileControlsEl) profileControlsEl.style.display = "none";
+  if (avatarInput) avatarInput.disabled = true;
+  if (logoutBtn) logoutBtn.style.display = "none";
+  if (uploadEventBtn) uploadEventBtn.style.display = "none";
+
+  if (aboutEl) {
+    aboutEl.readOnly = true;
+    aboutEl.placeholder = "";
+  }
+
+  if (eventsTitleEl) eventsTitleEl.textContent = "Händelser";
+}
+
 /* =========================
    DB
 ========================= */
-async function ensureProfileRow(user) {
-  const username = user.email?.split("@")[0] || "Användare";
-  const { error } = await supabase
-    .from("profiles")
-    .upsert({ id: user.id, username }, { onConflict: "id", ignoreDuplicates: true });
+async function fetchProfileById(userId) {
+  if (!userId) return null;
 
-  if (error) throw error;
-}
-
-async function loadProfile(user) {
-  // 1) säkerställ rad
-  try {
-    await ensureProfileRow(user);
-  } catch (e) {
-    console.warn("⚠️ ensureProfileRow failed (RLS?), continuing:", e?.message);
-  }
-
-  // 2) hämta profil
   const attempts = [
     "username, full_name, about, avatar_url, is_admin, is_verified",
     "username, full_name, about, avatar_url, is_admin",
@@ -237,7 +253,7 @@ async function loadProfile(user) {
     const res = await supabase
       .from("profiles")
       .select(fields)
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle();
 
     if (!res.error) {
@@ -257,6 +273,28 @@ async function loadProfile(user) {
   }
 
   if (error && error.code !== "PGRST116") console.error("❌ loadProfile error:", error);
+  return data;
+}
+
+async function ensureProfileRow(user) {
+  const username = user.email?.split("@")[0] || "Användare";
+  const { error } = await supabase
+    .from("profiles")
+    .upsert({ id: user.id, username }, { onConflict: "id", ignoreDuplicates: true });
+
+  if (error) throw error;
+}
+
+async function loadProfile(user) {
+  // 1) säkerställ rad
+  try {
+    await ensureProfileRow(user);
+  } catch (e) {
+    console.warn("⚠️ ensureProfileRow failed (RLS?), continuing:", e?.message);
+  }
+
+  // 2) hämta profil
+  const data = await fetchProfileById(user.id);
 
   const username = data?.username || (user.email?.split("@")[0] || "Användare");
   const displayName = data?.full_name || username;
@@ -274,6 +312,25 @@ async function loadProfile(user) {
   applyProfileBadge({ is_admin: !!data?.is_admin, is_verified: !!data?.is_verified });
 
   return username; // returnera “server truth”
+}
+
+async function loadProfileById(userId) {
+  const data = await fetchProfileById(userId);
+
+  const username = data?.username || "Användare";
+  const displayName = data?.full_name || username;
+
+  if (nameEl) nameEl.textContent = displayName;
+  if (aboutEl) aboutEl.value = data?.about || "";
+
+  // Sätt input till sparat username (inte displayName)
+  if (nameInput) nameInput.value = username;
+
+  setAvatar(data?.avatar_url || null, initialsFrom(displayName));
+  setNameEditorOpen(false);
+  applyProfileBadge({ is_admin: !!data?.is_admin, is_verified: !!data?.is_verified });
+
+  return { username, displayName, hasProfile: !!data };
 }
 
 async function saveAbout(user) {
@@ -327,7 +384,7 @@ async function uploadAvatar(user, file) {
 /* =========================
    My events
 ========================= */
-function renderCard(ev) {
+function renderCard(ev, allowDelete = true) {
   const imgs = ev.image_urls || [];
   const first = imgs.length ? imgs[0] : null;
 
@@ -351,16 +408,18 @@ function renderCard(ev) {
           <div class="my-title-row">
             <h3 class="my-title">${ev.title || ""}</h3>
 
-            <button
-              class="my-del"
-              type="button"
-              data-action="delete-event"
-              data-id="${ev.id}"
-              aria-label="Ta bort händelse"
-              title="Ta bort"
-            >
-              Ta bort
-            </button>
+            ${allowDelete ? `
+              <button
+                class="my-del"
+                type="button"
+                data-action="delete-event"
+                data-id="${ev.id}"
+                aria-label="Ta bort händelse"
+                title="Ta bort"
+              >
+                Ta bort
+              </button>
+            ` : ""}
           </div>
 
           <p class="my-meta">${placeHtml}${metaSeparator}📅 ${ev.date || ""} ${timeText}${endText}</p>
@@ -373,13 +432,16 @@ function renderCard(ev) {
 }
 
 
-async function loadMyEvents(user) {
+async function loadMyEvents(userOrId, allowDelete = true) {
+  const userId = typeof userOrId === "string" ? userOrId : userOrId?.id;
+  if (!userId) return;
+
   if (metaEl) metaEl.textContent = "Laddar händelser...";
 
   const { data, error } = await supabase
     .from("events")
     .select("id, created_at, title, place, date, time, end_time, info, image_urls, user_id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -400,7 +462,7 @@ async function loadMyEvents(user) {
   }
 
   if (myEmptyEl) myEmptyEl.style.display = "none";
-  myEventsEl.innerHTML = list.map(renderCard).join("");
+  myEventsEl.innerHTML = list.map((ev) => renderCard(ev, allowDelete)).join("");
 }
 
 async function deleteMyEvent(user, eventId) {
@@ -487,6 +549,15 @@ async function trySyncPendingUsername(user) {
 async function main() {
   const session = await requireLogin();
   const user = session.user;
+  const viewUserId = getViewUserId();
+  const isSelf = !viewUserId || viewUserId === user.id;
+
+  if (!isSelf) {
+    setReadOnlyUI();
+    await loadProfileById(viewUserId);
+    await loadMyEvents(viewUserId, false);
+    return;
+  }
 
   // 1) om vi har pending från tidigare sidbyte -> försök synca direkt
   const pendingSaved = await trySyncPendingUsername(user);

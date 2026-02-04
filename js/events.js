@@ -180,7 +180,7 @@ function profileBadgeMarkup(profile) {
 
 function profileAvatarMarkup(profile, fallbackText, displayName) {
   const avatarUrl = profile?.avatar_url || "";
-  const safeName = displayName || "Användare";
+  const safeName = safeText(displayName || "Användare");
   if (!avatarUrl) {
     return `<span class="event-host-avatar">${fallbackText}</span>`;
   }
@@ -504,6 +504,10 @@ function canDemoteAdmin() {
   return !!currentUserId && currentUserId === OWNER_ADMIN_ID;
 }
 
+function canPromoteAdmin() {
+  return !!currentUserId && currentUserId === OWNER_ADMIN_ID;
+}
+
 function renderAdminUserRow(p) {
   const primary = safeText(profileLabel(p));
   const username = safeText(p?.username || "");
@@ -520,8 +524,15 @@ function renderAdminUserRow(p) {
   const isExpanded = adminExpandedIds.has(id);
   const canRemoveAdmin = !isAdmin || canDemoteAdmin();
   const adminBtnDisabled = isAdmin && !canRemoveAdmin;
-  const adminBtnLabel = isAdmin ? (adminBtnDisabled ? "Endast ägaren" : "Ta bort admin") : "Gör admin";
-  const adminBtnTitle = adminBtnDisabled ? "Endast ägaren kan ta bort admin" : "";
+  const canMakeAdmin = isAdmin ? true : canPromoteAdmin();
+  const makeAdminDisabled = !isAdmin && !canMakeAdmin;
+  const adminBtnDisabledFinal = adminBtnDisabled || makeAdminDisabled;
+  const adminBtnLabel = isAdmin
+    ? (adminBtnDisabled ? "Endast ägaren" : "Ta bort admin")
+    : (makeAdminDisabled ? "Endast ägaren" : "Gör admin");
+  const adminBtnTitle = adminBtnDisabled
+    ? "Endast ägaren kan ta bort admin"
+    : (makeAdminDisabled ? "Endast ägaren kan göra admins" : "");
 
   return `
     <li class="admin-user" data-user-id="${id}">
@@ -548,7 +559,7 @@ function renderAdminUserRow(p) {
             ${isExpanded ? "Mindre" : "Mer"}
           </button>
         ` : ""}
-        <button class="admin-action-btn" data-action="admin-toggle-admin" data-id="${id}" data-is-admin="${isAdmin}" data-name="${label}" ${adminBtnDisabled ? "disabled" : ""} ${adminBtnTitle ? `title="${adminBtnTitle}"` : ""}>
+        <button class="admin-action-btn" data-action="admin-toggle-admin" data-id="${id}" data-is-admin="${isAdmin}" data-name="${label}" ${adminBtnDisabledFinal ? "disabled" : ""} ${adminBtnTitle ? `title="${adminBtnTitle}"` : ""}>
           ${adminBtnLabel}
         </button>
         <button class="admin-action-btn" data-action="admin-toggle-verify" data-id="${id}" data-is-verified="${isVerified}" data-name="${label}">
@@ -701,6 +712,10 @@ function ensureAdminModal() {
       if (!id) return;
       if (isAdmin && !canDemoteAdmin()) {
         alert("Endast ägaren kan ta bort admin från andra admins.");
+        return;
+      }
+      if (!isAdmin && !canPromoteAdmin()) {
+        alert("Endast ägaren kan göra andra till admins.");
         return;
       }
       if (!confirm((isAdmin ? 'Ta bort admin-rättigheter för ' : 'Ge admin-rättigheter till ') + name + '?')) return;
@@ -985,6 +1000,7 @@ function renderEvent(ev) {
   const firstImg = imgs.length ? imgs[0] : null;
 
   const authorName = authorNameFromProfile(ev.profiles, "Användare");
+  const authorNameSafe = safeText(authorName);
   const initials = initialsFrom(authorName);
 
   const isOwner = !!currentUserId && currentUserId === ev.user_id;
@@ -999,9 +1015,14 @@ function renderEvent(ev) {
   const categoryLabel = normalizeCategory(ev.category);
   const priceLabel = formatPriceLabel(ev.price);
   const freePrice = isFreePrice(ev.price);
-  const desc = ev.info ? truncate(ev.info, 120) : "";
+  const fullDesc = String(ev.info || "").trim();
+  const hasLongDesc = fullDesc.length > 120;
+  const shortDesc = hasLongDesc ? truncate(fullDesc, 120) : fullDesc;
+  const shortDescSafe = safeText(shortDesc);
+  const fullDescSafe = safeText(fullDesc);
   const badge = profileBadgeMarkup(ev.profiles);
   const avatar = profileAvatarMarkup(ev.profiles, initials, authorName);
+  const authorProfileHref = ev.user_id ? `html/Profil.html?uid=${encodeURIComponent(ev.user_id)}` : "";
 
   const canDelete = isCurrentUserAdmin || (currentUserId && currentUserId === ev.user_id);
 
@@ -1027,7 +1048,21 @@ function renderEvent(ev) {
       <div class="event-body">
         <h3 class="event-title">${ev.title || ""}</h3>
 
-        ${desc ? `<p class="event-desc">${desc}</p>` : ""}
+        ${fullDesc ? `
+          <div class="event-desc-wrap">
+            <p
+              class="event-desc"
+              data-short="${shortDescSafe}"
+              data-full="${fullDescSafe}"
+              data-collapsed="${hasLongDesc ? "true" : "false"}"
+            >${shortDescSafe}</p>
+            ${hasLongDesc ? `
+              <button class="event-desc-toggle" data-action="toggle-desc" type="button" aria-expanded="false">
+                Visa mer
+              </button>
+            ` : ""}
+          </div>
+        ` : ""}
 
         <div class="event-meta">
           ${dateText ? `<span class="event-meta-item">${ICONS.calendar}<span>${dateText}</span></span>` : ""}
@@ -1044,7 +1079,11 @@ function renderEvent(ev) {
           <div class="event-host">
             ${avatar}
             <div class="event-host-text">
-              <span class="event-host-name">${authorName}${badge}</span>
+              ${
+                authorProfileHref
+                  ? `<a class="event-host-name" href="${authorProfileHref}" title="Visa profil">${authorNameSafe}${badge}</a>`
+                  : `<span class="event-host-name">${authorNameSafe}${badge}</span>`
+              }
               <span class="event-host-time">${timeAgo(ev.created_at)}</span>
             </div>
           </div>
@@ -1220,6 +1259,28 @@ function wireEvents() {
     if (!eventId) return;
 
     const action = actionBtn.dataset.action;
+
+    if (action === "toggle-desc") {
+      const descEl = card?.querySelector(".event-desc");
+      if (!descEl) return;
+
+      const isCollapsed = descEl.dataset.collapsed === "true";
+      const shortText = descEl.dataset.short || "";
+      const fullText = descEl.dataset.full || "";
+
+      if (isCollapsed) {
+        descEl.textContent = fullText;
+        descEl.dataset.collapsed = "false";
+        actionBtn.textContent = "Visa mindre";
+        actionBtn.setAttribute("aria-expanded", "true");
+      } else {
+        descEl.textContent = shortText;
+        descEl.dataset.collapsed = "true";
+        actionBtn.textContent = "Visa mer";
+        actionBtn.setAttribute("aria-expanded", "false");
+      }
+      return;
+    }
 
     // ✅ Jag kommer / ⛔ Avbryt
     if (action === "toggle-attend") {

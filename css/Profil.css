@@ -334,6 +334,18 @@
   transform: translateY(-1px);
 }
 
+.profil-box[readonly]{
+  background: var(--surface-muted);
+  border-color: var(--border-soft);
+  box-shadow: none;
+  cursor: default;
+}
+
+.profil-box[readonly]:focus{
+  box-shadow: none;
+  transform: none;
+}
+
 /* Section title */
 .profil-section-title{
   margin: 22px 0 12px;

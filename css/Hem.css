@@ -619,6 +619,28 @@
   line-height: 1.6;
 }
 
+.event-desc-wrap{
+  display: grid;
+  gap: 6px;
+}
+
+.event-desc-toggle{
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(24,119,242,0.92);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  justify-self: start;
+}
+
+.event-desc-toggle:hover{
+  filter: brightness(0.95);
+}
+
 .event-meta{
   display:flex;
   flex-wrap: wrap;
@@ -712,6 +734,12 @@
   font-weight: 900;
   font-size: 12px;
   color: var(--text-strong);
+  text-decoration: none;
+}
+
+.event-host-name:hover{
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .event-host-time{
