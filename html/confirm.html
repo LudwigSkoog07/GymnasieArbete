@@ -27,6 +27,15 @@
     </div>
   </div>
 
+  <!-- Cookie Banner -->
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie-meddelande">
+    <p>
+      Vi använder cookies för att förbättra upplevelsen. Genom att fortsätta
+      accepterar du cookies.
+    </p>
+    <button id="cookieAccept" type="button">Acceptera</button>
+  </div>
+
   <script type="module">
     import { supabase } from "../js/supabaseClient.js";
 
@@ -72,5 +81,6 @@ async function run() {
 
 run();
   </script>
+  <script src="../js/cookie.js"></script>
 </body>
 </html>

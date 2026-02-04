@@ -10,7 +10,11 @@
   <link rel="stylesheet" href="css/Global.css" />
   <link rel="stylesheet" href="css/Hem.css" />
 
-  <title>HöganäsEvents</title>
+  <meta
+    name="description"
+    content="HöganäsEvents visar lokala event, aktiviteter och happenings i Höganäs kommun. Upptäck vad som händer nära dig!"
+  />
+  <title>HöganäsEvents – Lokala event i Höganäs</title>
   <link rel="icon" type="image/x-icon" href="img/Eventslogg.png" />
 </head>
 
@@ -138,8 +142,8 @@
           <div class="composer-top">
             <div class="composer-avatar">H</div>
             <div class="composer-text">
-              <div class="composer-title">Vad händer i Höganäs?</div>
-              <div class="composer-sub">Lägg upp något lokalt — på 30 sekunder.</div>
+            <h1 class="composer-title">Event i Höganäs</h1>
+            <p class="composer-sub">Hitta konserter, aktiviteter och lokala event i Höganäs.</p>
             </div>
           </div>
 
@@ -208,10 +212,20 @@
     </div>
   </main>
 
+  <!-- Cookie Banner -->
+  <div id="cookieBanner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie-meddelande">
+    <p>
+      Vi använder cookies för att förbättra upplevelsen. Genom att fortsätta
+      accepterar du cookies.
+    </p>
+    <button id="cookieAccept" type="button">Acceptera</button>
+  </div>
+
   <!-- JS -->
   <script src="js/Main.js"></script>
   <script type="module" src="js/headerAuth.js"></script>
   <script type="module" src="js/events.js"></script>
+  <script src="js/cookie.js"></script>
 
 </body>
 </html>
