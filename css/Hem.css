@@ -580,8 +580,8 @@
 }
 
 :root[data-theme="dark"] .event-badge.price{
-  background: rgba(249,115,22,0.85);
-  border-color: rgba(249,115,22,0.45);
+  background: var(--accent);
+  border-color: var(--accent-border-3);
 }
 :root[data-theme="dark"] .event-badge.price.is-free{
   background: var(--success);
@@ -685,9 +685,9 @@
 }
 
 .event-badge.price{
-  background: rgba(249,115,22,0.92);
+  background: var(--accent);
   color: #fff;
-  border-color: rgba(249,115,22,0.45);
+  border-color: var(--accent-border-3);
 }
 .event-badge.price.is-free{
   background: var(--success);

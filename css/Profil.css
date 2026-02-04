@@ -175,7 +175,13 @@
 .upload-pill:hover{
   transform: translateY(-1px);
   box-shadow: 0 10px 20px rgba(15,23,42,0.08);
-  background: rgba(255,255,255,0.95);
+  background: var(--surface-stronger);
+  border-color: var(--border-strong);
+}
+
+.upload-pill:hover .upload-sub{
+  background: var(--accent-soft-2);
+  border-color: var(--accent-border-2);
 }
 
 .upload-title{
