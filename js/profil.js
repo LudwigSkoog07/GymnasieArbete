@@ -20,6 +20,7 @@ const myEmptyEl = document.getElementById("myEmpty");
 
 const aboutEl = document.getElementById("aboutMe");
 const nameEl = document.getElementById("profileName");
+const badgeEl = document.getElementById("profileBadge");
 
 const avatarImg = document.getElementById("avatarImg");
 const avatarInput = document.getElementById("avatarInput");
@@ -179,6 +180,29 @@ function setAvatar(url, fallbackText) {
   }
 }
 
+function applyProfileBadge(flags) {
+  if (!badgeEl) return;
+  const isAdmin = !!flags?.is_admin;
+  const isVerified = !!flags?.is_verified;
+  const type = isAdmin ? "admin" : (isVerified ? "verified" : null);
+
+  if (!type) {
+    badgeEl.hidden = true;
+    badgeEl.classList.remove("is-admin", "is-verified");
+    badgeEl.removeAttribute("data-tooltip");
+    badgeEl.removeAttribute("aria-label");
+    return;
+  }
+
+  const label = type === "admin" ? "Owner" : "Verifierad";
+  badgeEl.hidden = false;
+  badgeEl.textContent = type === "admin" ? "✔" : "✓";
+  badgeEl.classList.toggle("is-admin", type === "admin");
+  badgeEl.classList.toggle("is-verified", type === "verified");
+  badgeEl.setAttribute("data-tooltip", label);
+  badgeEl.setAttribute("aria-label", label);
+}
+
 /* =========================
    DB
 ========================= */
@@ -200,11 +224,37 @@ async function loadProfile(user) {
   }
 
   // 2) hämta profil
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("username, full_name, about, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
+  const attempts = [
+    "username, full_name, about, avatar_url, is_admin, is_verified",
+    "username, full_name, about, avatar_url, is_admin",
+    "username, full_name, about, avatar_url"
+  ];
+
+  let data = null;
+  let error = null;
+
+  for (const fields of attempts) {
+    const res = await supabase
+      .from("profiles")
+      .select(fields)
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!res.error) {
+      data = res.data || null;
+      error = null;
+      break;
+    }
+
+    error = res.error;
+    const msg = String(res.error?.message || "").toLowerCase();
+    const missingColumn =
+      res.error?.code === "42703" ||
+      msg.includes("is_verified") ||
+      msg.includes("is_admin");
+
+    if (!missingColumn) break;
+  }
 
   if (error && error.code !== "PGRST116") console.error("❌ loadProfile error:", error);
 
@@ -221,6 +271,7 @@ async function loadProfile(user) {
 
   // Editor ska vara stängd + låst tills man trycker penna
   setNameEditorOpen(false);
+  applyProfileBadge({ is_admin: !!data?.is_admin, is_verified: !!data?.is_verified });
 
   return username; // returnera “server truth”
 }

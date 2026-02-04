@@ -45,6 +45,10 @@
   --accent: #1D4ED8;   /* blå */
   --accent2: #2FA8E0;  /* cyan-blå */
   --warm: #FFB86B;
+  --badge-verified: #1D4ED8;
+  --badge-verified-border: rgba(29,78,216,0.45);
+  --badge-admin: #F97316;
+  --badge-admin-border: rgba(249,115,22,0.45);
 
   /* Layout */
   --header-h: 66px;
@@ -113,6 +117,10 @@
   --nav-border: rgba(148,163,184,0.22);
   --nav-item-hover-bg: rgba(30,41,59,0.92);
   --nav-item-hover-border: rgba(148,163,184,0.38);
+  --badge-verified: #60A5FA;
+  --badge-verified-border: rgba(96,165,250,0.55);
+  --badge-admin: #FB923C;
+  --badge-admin-border: rgba(251,146,60,0.55);
 
   --shadow-lg: 0 26px 70px rgba(0,0,0,0.45);
   --shadow-md: 0 16px 44px rgba(0,0,0,0.40);
@@ -338,6 +346,75 @@ body::after{
 
 .profile-toggle{
   position: relative;
+}
+
+/* =========================
+   Badges (admin / verified)
+========================= */
+.user-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+
+.user-badge[data-tooltip]{
+  position: relative;
+}
+
+.user-badge[data-tooltip]::after{
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translate(-50%, -100%) scale(0.98);
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--surface-stronger);
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+  transition: opacity var(--dur-1) var(--ease-out),
+              transform var(--dur-1) var(--ease-pop);
+  z-index: 2002;
+}
+
+.user-badge[data-tooltip]:hover::after,
+.user-badge[data-tooltip]:focus-visible::after{
+  opacity: 1;
+  transform: translate(-50%, -110%) scale(1);
+}
+
+.user-badge.is-admin{
+  background: var(--badge-admin);
+  border-color: var(--badge-admin-border);
+}
+
+.user-badge.is-verified{
+  background: var(--badge-verified);
+  border-color: var(--badge-verified-border);
+}
+
+.profile-badge{
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  pointer-events: none;
 }
 
 .profile-dropdown{

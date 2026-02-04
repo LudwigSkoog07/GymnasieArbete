@@ -81,6 +81,10 @@
   gap: 10px;
 }
 
+.profile-name-badge{
+  transform: translateY(1px);
+}
+
 .profil-name{
   margin: 0;
   font-size: 22px;

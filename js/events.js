@@ -19,6 +19,15 @@ let currentUserId = null;
 let isCurrentUserAdmin = false;
 let allEvents = [];
 let activeCategory = "Alla";
+let adminProfiles = [];
+let adminUserSearch = "";
+let adminProfilesError = false;
+let adminExpandedIds = new Set();
+
+const PROFILE_FIELDS_FULL = "id, username, full_name, avatar_url, is_admin, is_verified";
+const PROFILE_FIELDS_ADMIN_ONLY = "id, username, full_name, avatar_url, is_admin";
+const PROFILE_FIELDS_BASIC = "id, username, full_name, avatar_url";
+const OWNER_ADMIN_ID = "bfb4458c-2284-4cb9-b40e-1359a723b003";
 
 /* =========================
    Categories / Filters
@@ -81,6 +90,15 @@ function truncate(text, max = 120) {
   if (!s) return "";
   if (s.length <= max) return s;
   return s.slice(0, max).trimEnd() + "…";
+}
+
+function safeText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function normalizeCategory(raw) {
@@ -147,6 +165,37 @@ function authorNameFromProfile(profile, fallback = "Användare") {
 
 function displayName(profile) {
   return profile?.full_name || profile?.username || "Användare";
+}
+
+function profileBadgeMarkup(profile) {
+  if (!profile) return "";
+  if (profile.is_admin) {
+    return `<span class="user-badge is-admin" role="img" aria-label="Owner" data-tooltip="Owner">✔</span>`;
+  }
+  if (profile.is_verified) {
+    return `<span class="user-badge is-verified" role="img" aria-label="Verifierad" data-tooltip="Verifierad">✓</span>`;
+  }
+  return "";
+}
+
+function profileAvatarMarkup(profile, fallbackText, displayName) {
+  const avatarUrl = profile?.avatar_url || "";
+  const safeName = displayName || "Användare";
+  if (!avatarUrl) {
+    return `<span class="event-host-avatar">${fallbackText}</span>`;
+  }
+
+  return `
+    <span class="event-host-avatar has-img">
+      ${fallbackText}
+      <img
+        src="${avatarUrl}"
+        alt="${safeName} profilbild"
+        loading="lazy"
+        onerror="this.closest('.event-host-avatar').classList.remove('has-img'); this.remove();"
+      />
+    </span>
+  `;
 }
 
 function fmtKommer(count) {
@@ -309,7 +358,7 @@ async function fetchAttendeesMeta(eventIds) {
 async function fetchAttendeesList(eventId) {
   const { data, error } = await supabase
     .from("event_attendees")
-    .select(`user_id, profiles:user_id ( id, username, full_name, avatar_url )`)
+    .select(`user_id, profiles:user_id ( ${PROFILE_FIELDS_BASIC} )`)
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
 
@@ -397,6 +446,159 @@ function closeAttendeesModal() {
 }
 
 /* =========================
+   Admin helpers
+========================= */
+function normalizeSearchTerm(term) {
+  return String(term || "").trim().toLowerCase();
+}
+
+function profileLabel(profile) {
+  return profile?.full_name || profile?.username || profile?.id || "Användare";
+}
+
+function buildProfileSearchText(profile) {
+  return [
+    profile?.full_name,
+    profile?.username,
+    profile?.id
+  ].filter(Boolean).join(" ").toLowerCase();
+}
+
+function filterProfilesBySearch(list, term) {
+  const q = normalizeSearchTerm(term);
+  if (!q) return list || [];
+  return (list || []).filter((p) => buildProfileSearchText(p).includes(q));
+}
+
+function sortProfiles(list) {
+  return [...(list || [])].sort((a, b) => {
+    const aLabel = profileLabel(a).toLowerCase();
+    const bLabel = profileLabel(b).toLowerCase();
+    return aLabel.localeCompare(bLabel, "sv");
+  });
+}
+
+function splitProfilesByStatus(list) {
+  const admins = [];
+  const verified = [];
+  const unverified = [];
+
+  for (const p of list || []) {
+    if (p?.is_admin) {
+      admins.push(p);
+    } else if (p?.is_verified) {
+      verified.push(p);
+    } else {
+      unverified.push(p);
+    }
+  }
+
+  return {
+    admins: sortProfiles(admins),
+    verified: sortProfiles(verified),
+    unverified: sortProfiles(unverified)
+  };
+}
+
+function canDemoteAdmin() {
+  return !!currentUserId && currentUserId === OWNER_ADMIN_ID;
+}
+
+function renderAdminUserRow(p) {
+  const primary = safeText(profileLabel(p));
+  const username = safeText(p?.username || "");
+  const fullName = safeText(p?.full_name || "");
+  const id = safeText(p?.id || "");
+  const isAdmin = !!p?.is_admin;
+  const isVerified = !!p?.is_verified;
+  const label = safeText(profileLabel(p));
+  const metaParts = [];
+  if (fullName && fullName !== primary) metaParts.push(fullName);
+  if (username && username !== primary) metaParts.push(`@${username}`);
+
+  const hasDetails = !!(metaParts.length || id);
+  const isExpanded = adminExpandedIds.has(id);
+  const canRemoveAdmin = !isAdmin || canDemoteAdmin();
+  const adminBtnDisabled = isAdmin && !canRemoveAdmin;
+  const adminBtnLabel = isAdmin ? (adminBtnDisabled ? "Endast ägaren" : "Ta bort admin") : "Gör admin";
+  const adminBtnTitle = adminBtnDisabled ? "Endast ägaren kan ta bort admin" : "";
+
+  return `
+    <li class="admin-user" data-user-id="${id}">
+      <div class="admin-user-main">
+        <div class="admin-user-text">
+          <div class="admin-user-name">${primary}</div>
+          ${hasDetails ? `
+            <div class="admin-user-details" ${isExpanded ? "" : "hidden"}>
+              <div class="admin-user-meta">
+                ${metaParts.map((t) => `<span>${t}</span>`).join("")}
+                ${id ? `<span>ID: <code>${id}</code></span>` : ""}
+              </div>
+            </div>
+          ` : ""}
+        </div>
+        <div class="admin-user-badges">
+          ${isAdmin ? `<span class="admin-pill is-admin">Admin</span>` : ""}
+          ${isVerified ? `<span class="admin-pill is-verified">Verifierad</span>` : ""}
+        </div>
+      </div>
+      <div class="admin-user-actions">
+        ${hasDetails ? `
+          <button class="admin-action-btn ghost admin-more-btn" data-action="admin-toggle-details" data-id="${id}" aria-expanded="${isExpanded ? "true" : "false"}">
+            ${isExpanded ? "Mindre" : "Mer"}
+          </button>
+        ` : ""}
+        <button class="admin-action-btn" data-action="admin-toggle-admin" data-id="${id}" data-is-admin="${isAdmin}" data-name="${label}" ${adminBtnDisabled ? "disabled" : ""} ${adminBtnTitle ? `title="${adminBtnTitle}"` : ""}>
+          ${adminBtnLabel}
+        </button>
+        <button class="admin-action-btn" data-action="admin-toggle-verify" data-id="${id}" data-is-verified="${isVerified}" data-name="${label}">
+          ${isVerified ? "Avverifiera" : "Verifiera"}
+        </button>
+      </div>
+    </li>
+  `;
+}
+
+function renderAdminUsersList(list, emptyLabel = "Inga profiler hittades.") {
+  if (!list.length) return `<li class="admin-empty">${emptyLabel}</li>`;
+
+  const grouped = splitProfilesByStatus(list);
+  const sections = [
+    { title: "Admin", items: grouped.admins },
+    { title: "Verifierad", items: grouped.verified },
+    { title: "Ej verifierad", items: grouped.unverified }
+  ];
+
+  let html = "";
+
+  for (const section of sections) {
+    if (!section.items.length) continue;
+    html += `
+      <li class="admin-section-title">
+        <span>${section.title}</span>
+        <span class="admin-section-count">${section.items.length}</span>
+      </li>
+      ${section.items.map((p) => renderAdminUserRow(p)).join("")}
+    `;
+  }
+
+  return html || `<li class="admin-empty">${emptyLabel}</li>`;
+}
+
+function updateAdminUsersView() {
+  const listEl = document.getElementById("adminUsersList");
+  const countEl = document.getElementById("adminUserCount");
+  if (!listEl) return;
+
+  const filtered = filterProfilesBySearch(adminProfiles, adminUserSearch);
+  listEl.innerHTML = renderAdminUsersList(
+    filtered,
+    adminProfilesError ? "Kunde inte ladda profiler." : "Inga profiler hittades."
+  );
+  if (countEl) countEl.textContent = `${filtered.length} profiler`;
+}
+
+/* =========================
    Admin panel (modal + loader)
 ========================= */
 function ensureAdminModal() {
@@ -420,8 +622,12 @@ function ensureAdminModal() {
   document.body.appendChild(modal);
 
   modal.addEventListener("click", async (e) => {
-    const action = e.target?.dataset?.action;
-    const tab = e.target?.dataset?.tab;
+    const target = e.target;
+    const actionBtn = target?.closest ? target.closest("[data-action]") : null;
+    const tabBtn = target?.closest ? target.closest("[data-tab]") : null;
+    const closeBtn = target?.closest ? target.closest("[data-close]") : null;
+    const action = actionBtn?.dataset?.action;
+    const tab = tabBtn?.dataset?.tab;
 
     if (action === "copy-uid") {
       try {
@@ -438,8 +644,44 @@ function ensureAdminModal() {
       return;
     }
 
+    if (action === "admin-clear-search") {
+      adminUserSearch = "";
+      const input = document.getElementById("adminUserSearch");
+      if (input) input.value = "";
+      updateAdminUsersView();
+      return;
+    }
+
+    if (action === "admin-toggle-details") {
+      const id = actionBtn?.dataset?.id || "";
+      const listEl = document.getElementById("adminUsersList");
+      if (!id || !listEl) return;
+
+      const row = Array.from(listEl.querySelectorAll(".admin-user"))
+        .find((el) => el.dataset.userId === id);
+      if (!row) return;
+
+      const details = row.querySelector(".admin-user-details");
+      const btn = row.querySelector('[data-action="admin-toggle-details"]');
+      if (!details || !btn) return;
+
+      const isOpen = !details.hidden;
+      details.hidden = isOpen;
+
+      if (isOpen) {
+        adminExpandedIds.delete(id);
+        btn.textContent = "Mer";
+        btn.setAttribute("aria-expanded", "false");
+      } else {
+        adminExpandedIds.add(id);
+        btn.textContent = "Mindre";
+        btn.setAttribute("aria-expanded", "true");
+      }
+      return;
+    }
+
     if (action === "admin-delete-event") {
-      const id = e.target?.dataset?.id;
+      const id = actionBtn?.dataset?.id;
       if (!id) return;
       if (!confirm('Vill du verkligen ta bort denna händelse?')) return;
       try {
@@ -453,12 +695,33 @@ function ensureAdminModal() {
     }
 
     if (action === "admin-toggle-admin") {
-      const id = e.target?.dataset?.id;
-      const isAdmin = e.target?.dataset?.isAdmin === "true";
+      const id = actionBtn?.dataset?.id;
+      const isAdmin = actionBtn?.dataset?.isAdmin === "true";
+      const name = actionBtn?.dataset?.name || id;
       if (!id) return;
-      if (!confirm((isAdmin ? 'Ta bort admin-rättigheter för ' : 'Ge admin-rättigheter till ') + id + '?')) return;
+      if (isAdmin && !canDemoteAdmin()) {
+        alert("Endast ägaren kan ta bort admin från andra admins.");
+        return;
+      }
+      if (!confirm((isAdmin ? 'Ta bort admin-rättigheter för ' : 'Ge admin-rättigheter till ') + name + '?')) return;
       try {
         const { error } = await supabase.from('profiles').update({ is_admin: !isAdmin }).eq('id', id);
+        if (error) { alert('Kunde inte uppdatera: ' + (error.message || error)); return; }
+        await loadAdminPanel();
+      } catch (err) {
+        alert('Kunde inte uppdatera: ' + (err?.message || err));
+      }
+      return;
+    }
+
+    if (action === "admin-toggle-verify") {
+      const id = actionBtn?.dataset?.id;
+      const isVerified = actionBtn?.dataset?.isVerified === "true";
+      const name = actionBtn?.dataset?.name || id;
+      if (!id) return;
+      if (!confirm((isVerified ? 'Ta bort verifiering för ' : 'Verifiera ') + name + '?')) return;
+      try {
+        const { error } = await supabase.from('profiles').update({ is_verified: !isVerified }).eq('id', id);
         if (error) { alert('Kunde inte uppdatera: ' + (error.message || error)); return; }
         await loadAdminPanel();
       } catch (err) {
@@ -475,7 +738,15 @@ function ensureAdminModal() {
       return;
     }
 
-    if (e.target?.dataset?.close) closeAdminModal();
+    if (closeBtn) closeAdminModal();
+  });
+
+  modal.addEventListener("input", (e) => {
+    const target = e.target;
+    if (target?.id === "adminUserSearch") {
+      adminUserSearch = target.value || "";
+      updateAdminUsersView();
+    }
   });
 
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdminModal(); });
@@ -497,15 +768,42 @@ function closeAdminModal() {
   document.body.style.overflow = '';
 }
 
+async function loadAdminProfiles() {
+  const attempts = [
+    "id, username, full_name, is_admin, is_verified",
+    "id, username, full_name, is_admin"
+  ];
+
+  let lastError = null;
+
+  for (const fields of attempts) {
+    const res = await supabase
+      .from("profiles")
+      .select(fields)
+      .order("username");
+
+    if (!res.error) return res;
+
+    lastError = res.error;
+    const msg = String(res.error?.message || "").toLowerCase();
+    const missingColumn = res.error?.code === "42703" || msg.includes("is_verified");
+    if (!missingColumn) return res;
+  }
+
+  return { error: lastError };
+}
+
 async function loadAdminPanel() {
   openAdminModal('<p>Laddar adminpanelen...</p>');
 
   try {
     const evRes = await loadEventsWithJoin();
-    const profilesRes = await supabase.from('profiles').select('id, username, full_name, is_admin').order('username');
+    const profilesRes = await loadAdminProfiles();
 
     const events = evRes.error ? (await loadEventsNoJoin()).data || [] : evRes.data || [];
     const profiles = profilesRes.error ? [] : profilesRes.data || [];
+    adminProfiles = profiles;
+    adminProfilesError = !!profilesRes.error;
 
     const eventsHtml = events.map(ev => {
       const author = authorNameFromProfile(ev.profiles, 'Användare');
@@ -515,28 +813,40 @@ async function loadAdminPanel() {
       </li>`;
     }).join('');
 
-    const usersHtml = profiles.map(p => {
-      return `<li class="admin-user" style="padding:8px;border-bottom:1px solid #eee;">
-        <strong>${p.username || p.id}</strong> ${p.full_name ? '- ' + p.full_name : ''} 
-        <span style="margin-left:8px;">${p.is_admin ? '🔒 Admin' : ''}</span>
-        <button data-action="admin-toggle-admin" data-id="${p.id}" data-is-admin="${p.is_admin}" style="margin-left:8px;">${p.is_admin ? 'Ta bort admin' : 'Gör admin'}</button>
-      </li>`;
-    }).join('');
+    const filteredProfiles = filterProfilesBySearch(profiles, adminUserSearch);
+    const usersHtml = renderAdminUsersList(
+      filteredProfiles,
+      adminProfilesError ? "Kunde inte ladda profiler." : "Inga profiler hittades."
+    );
 
     const html = `
-      <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div>Min uid: <code id="adminUid">${currentUserId || ''}</code> <button data-action="copy-uid">Kopiera</button></div>
-        <div><button data-action="refresh-admin">Uppdatera</button></div>
+      <div class="admin-toolbar">
+        <div class="admin-meta">
+          <span>Min uid:</span> <code id="adminUid">${currentUserId || ''}</code>
+          <button class="admin-action-btn ghost" data-action="copy-uid">Kopiera</button>
+        </div>
+        <div><button class="admin-action-btn" data-action="refresh-admin">Uppdatera</button></div>
       </div>
-      <div class="admin-tabs" style="margin-bottom:12px;">
+      <div class="admin-tabs">
         <button class="admin-tab-btn is-on" data-tab="events">Händelser</button>
-        <button class="admin-tab-btn" data-tab="users">Användare</button>
+        <button class="admin-tab-btn" data-tab="users">Profiler</button>
       </div>
       <div data-admin-tab="events">
         <ul style="list-style:none;padding:0;margin:0;">${eventsHtml || '<li>Inga händelser</li>'}</ul>
       </div>
       <div data-admin-tab="users" hidden>
-        <ul style="list-style:none;padding:0;margin:0;">${usersHtml || '<li>Inga användare</li>'}</ul>
+        <div class="admin-user-toolbar">
+          <input
+            id="adminUserSearch"
+            class="admin-user-search"
+            type="search"
+            placeholder="Sök efter namn, användare eller id..."
+            value="${safeText(adminUserSearch)}"
+          />
+          <button class="admin-action-btn ghost" data-action="admin-clear-search">Rensa</button>
+          <div class="admin-user-count" id="adminUserCount">${profilesRes.error ? "0 profiler" : `${filteredProfiles.length} profiler`}</div>
+        </div>
+        <ul class="admin-users" id="adminUsersList">${usersHtml}</ul>
       </div>
     `;
 
@@ -572,27 +882,42 @@ function ensureAdminToggle() {
    Data: Events + profiles join/fallback
 ========================= */
 async function loadEventsWithJoin() {
-  const res = await supabase
-    .from("events")
-    .select(`
-      id, created_at, title, category, price, place, date, time, end_time, info, image_urls, user_id,
-      profiles:user_id ( id, username, full_name, avatar_url )
-    `)
-    .order("created_at", { ascending: false });
+  const buildSelect = (profileFields, includeCategoryPrice) => `
+    id, created_at, title, ${includeCategoryPrice ? "category, price," : ""} place, date, time, end_time, info, image_urls, user_id,
+    profiles:user_id ( ${profileFields} )
+  `;
 
-  if (!res.error) return res;
+  const attempts = [
+    { profileFields: PROFILE_FIELDS_FULL, includeCategoryPrice: true },
+    { profileFields: PROFILE_FIELDS_ADMIN_ONLY, includeCategoryPrice: true },
+    { profileFields: PROFILE_FIELDS_FULL, includeCategoryPrice: false },
+    { profileFields: PROFILE_FIELDS_ADMIN_ONLY, includeCategoryPrice: false },
+    { profileFields: PROFILE_FIELDS_BASIC, includeCategoryPrice: false }
+  ];
 
-  const msg = String(res.error?.message || "").toLowerCase();
-  const missingColumn = res.error?.code === "42703" || msg.includes("category") || msg.includes("price");
-  if (!missingColumn) return res;
+  let lastError = null;
 
-  return await supabase
-    .from("events")
-    .select(`
-      id, created_at, title, place, date, time, end_time, info, image_urls, user_id,
-      profiles:user_id ( id, username, full_name, avatar_url )
-    `)
-    .order("created_at", { ascending: false });
+  for (const attempt of attempts) {
+    const res = await supabase
+      .from("events")
+      .select(buildSelect(attempt.profileFields, attempt.includeCategoryPrice))
+      .order("created_at", { ascending: false });
+
+    if (!res.error) return res;
+
+    lastError = res.error;
+    const msg = String(res.error?.message || "").toLowerCase();
+    const missingColumn =
+      res.error?.code === "42703" ||
+      msg.includes("category") ||
+      msg.includes("price") ||
+      msg.includes("is_verified") ||
+      msg.includes("is_admin");
+
+    if (!missingColumn) return res;
+  }
+
+  return { error: lastError };
 }
 
 async function loadEventsNoJoin() {
@@ -616,13 +941,34 @@ async function loadEventsNoJoin() {
 async function loadProfilesForUserIds(userIds) {
   if (!userIds.length) return new Map();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, full_name, avatar_url")
-    .in("id", userIds);
+  const attempts = [PROFILE_FIELDS_FULL, PROFILE_FIELDS_ADMIN_ONLY, PROFILE_FIELDS_BASIC];
+  let lastError = null;
+  let data = null;
 
-  if (error) {
-    console.warn("⚠️ profiles lookup misslyckades:", error.message);
+  for (const fields of attempts) {
+    const res = await supabase
+      .from("profiles")
+      .select(fields)
+      .in("id", userIds);
+
+    if (!res.error) {
+      data = res.data || [];
+      lastError = null;
+      break;
+    }
+
+    lastError = res.error;
+    const msg = String(res.error?.message || "").toLowerCase();
+    const missingColumn =
+      res.error?.code === "42703" ||
+      msg.includes("is_verified") ||
+      msg.includes("is_admin");
+
+    if (!missingColumn) break;
+  }
+
+  if (lastError) {
+    console.warn("⚠️ profiles lookup misslyckades:", lastError.message || lastError);
     return new Map();
   }
 
@@ -654,6 +1000,8 @@ function renderEvent(ev) {
   const priceLabel = formatPriceLabel(ev.price);
   const freePrice = isFreePrice(ev.price);
   const desc = ev.info ? truncate(ev.info, 120) : "";
+  const badge = profileBadgeMarkup(ev.profiles);
+  const avatar = profileAvatarMarkup(ev.profiles, initials, authorName);
 
   const canDelete = isCurrentUserAdmin || (currentUserId && currentUserId === ev.user_id);
 
@@ -694,9 +1042,9 @@ function renderEvent(ev) {
 
         <div class="event-footer">
           <div class="event-host">
-            <span class="event-host-avatar">${initials}</span>
+            ${avatar}
             <div class="event-host-text">
-              <span class="event-host-name">${authorName}</span>
+              <span class="event-host-name">${authorName}${badge}</span>
               <span class="event-host-time">${timeAgo(ev.created_at)}</span>
             </div>
           </div>
