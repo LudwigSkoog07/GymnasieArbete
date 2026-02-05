@@ -107,157 +107,355 @@
 
   <!-- MAIN -->
   <main class="hem-main">
-    <div class="shell">
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-shell">
+        <div class="hero-content">
+          <p class="hero-kicker">HöganäsEvents</p>
+          <h1 id="heroTitle">Hitta ditt nästa event i Höganäs</h1>
+          <p class="hero-sub">
+            Upptäck konserter, aktiviteter och lokala event nära dig. Filtrera snabbt och planera veckan på en och samma plats.
+          </p>
 
-      <!-- LEFT SIDEBAR -->
-      <aside class="left-rail">
-        <div class="glass card pad">
-
-          <div class="profile-mini">
-            <div class="profile-mini-avatar">
-              <img src="img/Eventslogg.png" alt="">
+          <div class="hero-search" role="search" aria-label="Sök bland event" aria-describedby="searchHelp">
+            <div class="search-field">
+              <label for="searchWhat">Vad</label>
+              <input id="searchWhat" type="text" placeholder="Konsert, marknad, workshop" autocomplete="off">
             </div>
-
-            <div class="profile-mini-text">
-              <div class="profile-mini-name">HöganäsEvents</div>
-              <div class="profile-mini-sub">Upptäck vad som händer nära dig</div>
+            <div class="search-field">
+              <label for="searchWhen">När</label>
+              <input id="searchWhen" type="date" data-placeholder="Välj datum">
             </div>
-          </div>
-
-          <div class="rail-actions">
-            <a class="btn-primary" href="html/LaddaUp.html" data-auth="required">Ladda upp händelse</a>
-            <a class="btn-ghost" href="html/Profil.html" data-auth="required">Mitt konto</a>
-          </div>
-        </div>
-
-        <div class="glass card pad">
-          <div class="card-title">Tips</div>
-          <ul class="tips">
-            <li>Håll titeln kort och tydlig.</li>
-            <li>Lägg till plats + tid för fler besökare.</li>
-            <li>En bra beskrivning = fler klick.</li>
-          </ul>
-        </div>
-      </aside>
-
-      <!-- CENTER FEED -->
-      <section class="feed">
-
-        <div class="composer glass">
-          <div class="composer-top">
-            <div class="composer-avatar">H</div>
-            <div class="composer-text">
-            <h1 class="composer-title">Event i Höganäs</h1>
-            <p class="composer-sub">Hitta konserter, aktiviteter och lokala event i Höganäs.</p>
+            <div class="search-field">
+              <label for="searchWhere">Plats</label>
+              <input id="searchWhere" type="text" placeholder="Höganäs, Viken, Strandbaden" autocomplete="off">
             </div>
+            <button class="btn-primary" id="searchBtn" type="button">Sök event</button>
           </div>
+          <p class="hero-search-help" id="searchHelp">
+            Fyll i det som passar: vad du vill göra, när och var. Fälten filtrerar eventlistan längre ner på sidan.
+          </p>
 
-          <div class="composer-actions">
+          <div class="hero-actions">
             <a class="pill-action" href="html/LaddaUp.html" data-auth="required">
               <span class="dot"></span> Skapa händelse
             </a>
-            <a class="pill-action ghost" href="#events">
-              Senaste
-            </a>
-          </div>
-        </div>
-        <div class="filter-card glass">
-          <div class="filter-head">
-            <div class="filter-title">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>Filtrera</span>
-            </div>
-            <div class="filter-count" id="filterCount">0 händelser</div>
+            <a class="pill-action ghost" href="#events">Se alla event</a>
           </div>
 
-          <div class="filter-controls">
-            <div class="filter-row">
-              <div class="filter-group">
-                <div class="filter-label">Sortera</div>
-                <div class="filter-select">
-                  <select id="sortSelect" aria-label="Sortera händelser">
-                    <option value="Senast">Senast</option>
-                    <option value="Snart">Snart</option>
-                    <option value="Populärast">Populärast</option>
-                  </select>
+          <div class="hero-metrics">
+            <div class="metric">
+              <div class="metric-label">Händelser just nu</div>
+              <div class="metric-value" id="eventsCount2">0</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Snabbfilter</div>
+              <div class="metric-value small">Idag • Helgen • Denna vecka</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="poster-card">
+            <div class="poster-badge">Utvalt</div>
+            <h3>Veckans tips</h3>
+            <p>Se handplockade event och lokala favoriter samlade på ett ställe.</p>
+            <a class="poster-link" href="#events">Utforska utvalda event</a>
+          </div>
+
+          <div class="mini-cards">
+            <div class="mini-card">
+              <div class="mini-date">Musik</div>
+              <div class="mini-title">Livespelningar</div>
+              <div class="mini-sub">Små scener, stora upplevelser</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-date">Familj</div>
+              <div class="mini-title">För hela gänget</div>
+              <div class="mini-sub">Aktiviteter för stora och små</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-date">Mat</div>
+              <div class="mini-title">Smaka Höganäs</div>
+              <div class="mini-sub">Marknader, popups, smakprov</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-date">Natur</div>
+              <div class="mini-title">Ut i friluft</div>
+              <div class="mini-sub">Vandring, löpning, äventyr</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="section categories" aria-labelledby="categoryTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="categoryTitle">Utforska efter kategori</h2>
+          <p class="section-sub">Välj en kategori för att filtrera event direkt.</p>
+        </div>
+        <a class="section-link" href="#events">Bläddra alla</a>
+      </div>
+
+      <div class="category-grid">
+        <button class="category-card" type="button" data-category="Alla">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="category-name">Alla event</span>
+          <span class="category-meta">Se allt som händer</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Musik">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 18a3 3 0 1 0 0-6"></path>
+              <path d="M9 12V5l10-2v7"></path>
+              <circle cx="19" cy="18" r="3"></circle>
+            </svg>
+          </span>
+          <span class="category-name">Musik</span>
+          <span class="category-meta">Livespelningar & DJ</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Konst & Kultur">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3l9 6-9 6-9-6 9-6z"></path>
+              <path d="M3 9v6l9 6 9-6V9"></path>
+            </svg>
+          </span>
+          <span class="category-name">Konst & Kultur</span>
+          <span class="category-meta">Utställningar & teater</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Sport & Motion">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3v18M3 12h18"></path>
+            </svg>
+          </span>
+          <span class="category-name">Sport & Motion</span>
+          <span class="category-meta">Träning & tävling</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Mat & Dryck">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 3v7"></path>
+              <path d="M12 3v7"></path>
+              <path d="M16 3v7"></path>
+              <path d="M5 10h14v4a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5v-4z"></path>
+            </svg>
+          </span>
+          <span class="category-name">Mat & Dryck</span>
+          <span class="category-meta">Smaker, marknader, popups</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Familj">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="8" cy="9" r="3"></circle>
+              <circle cx="16" cy="7" r="2.5"></circle>
+              <path d="M2 20a6 6 0 0 1 12 0"></path>
+              <path d="M12 20a5 5 0 0 1 10 0"></path>
+            </svg>
+          </span>
+          <span class="category-name">Familj</span>
+          <span class="category-meta">Aktiviteter för alla</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Marknad">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10h16l-2 10H6L4 10z"></path>
+              <path d="M6 10l2-6h8l2 6"></path>
+            </svg>
+          </span>
+          <span class="category-name">Marknad</span>
+          <span class="category-meta">Loppis & hantverk</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Föreläsning">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4h16v10H4z"></path>
+              <path d="M8 18h8"></path>
+              <path d="M12 14v4"></path>
+            </svg>
+          </span>
+          <span class="category-name">Föreläsning</span>
+          <span class="category-meta">Lär dig något nytt</span>
+        </button>
+
+        <button class="category-card" type="button" data-category="Natur & Friluftsliv">
+          <span class="category-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 19l6-10 6 8 6-12"></path>
+              <path d="M3 19h18"></path>
+            </svg>
+          </span>
+          <span class="category-name">Natur & Friluftsliv</span>
+          <span class="category-meta">Vandring & äventyr</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FEATURED -->
+    <section class="section featured" aria-labelledby="featuredTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="featuredTitle">Utvalda just nu</h2>
+          <p class="section-sub">Populära event och kommande höjdpunkter.</p>
+        </div>
+        <div class="section-actions">
+          <span class="section-count" id="featuredCount">0 utvalda</span>
+          <a class="section-link" href="#events">Se alla</a>
+        </div>
+      </div>
+
+      <div class="featured-grid" id="featuredGrid"></div>
+      <div class="featured-empty glass" id="featuredEmpty" hidden>
+        <p>Inga utvalda event ännu. Lägg upp ditt nästa event!</p>
+        <a class="btn-primary" href="html/LaddaUp.html" data-auth="required">Skapa händelse</a>
+      </div>
+    </section>
+
+    <!-- EVENTS BOARD -->
+    <section class="section board" id="events" aria-labelledby="eventsTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="eventsTitle">Kommande event</h2>
+          <p class="section-sub">Filtrera och hitta något att göra redan idag.</p>
+        </div>
+        <div class="section-actions">
+          <span class="section-count" id="eventsCount">0 händelser</span>
+          <div class="view-toggle" role="tablist" aria-label="Välj vy">
+            <button class="toggle-btn is-active" type="button" data-view="list" aria-selected="true">Listvy</button>
+            <button class="toggle-btn" type="button" data-view="map" aria-selected="false">Kartvy</button>
+          </div>
+          <a class="btn-ghost" href="html/LaddaUp.html" data-auth="required">Lägg upp event</a>
+        </div>
+      </div>
+
+      <div class="board-grid">
+        <div class="board-main">
+          <div class="filter-card glass">
+            <div class="filter-head">
+              <div class="filter-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 5h16l-6 7v5l-4 2v-7L4 5z" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Filtrera</span>
+              </div>
+              <div class="filter-count" id="filterCount">0 händelser</div>
+            </div>
+
+            <div class="filter-controls">
+              <div class="filter-row">
+                <div class="filter-group">
+                  <div class="filter-label">Sortera</div>
+                  <div class="filter-select">
+                    <select id="sortSelect" aria-label="Sortera händelser">
+                      <option value="Senast">Senast</option>
+                      <option value="Snart">Snart</option>
+                      <option value="Populärast">Populärast</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="filter-clear" id="clearFilters" type="button">Rensa filter</button>
+              </div>
+
+              <div class="filter-row">
+                <div class="filter-group">
+                  <div class="filter-label">Datum</div>
+                  <div class="filter-pills date-pills" id="datePills"></div>
                 </div>
               </div>
-              <button class="filter-clear" id="clearFilters" type="button">Rensa filter</button>
-            </div>
 
-            <div class="filter-row">
-              <div class="filter-group">
-                <div class="filter-label">Datum</div>
-                <div class="filter-pills date-pills" id="datePills"></div>
-              </div>
-            </div>
-
-            <div class="filter-row">
-              <div class="filter-group">
-                <div class="filter-label">Kategori</div>
-                <div class="filter-pills" id="filterPills"></div>
+              <div class="filter-row">
+                <div class="filter-group">
+                  <div class="filter-label">Kategori</div>
+                  <div class="filter-pills" id="filterPills"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Events -->
-        <div class="feed-head" id="events">
-          <h2 class="feed-title">Senaste händelser</h2>
-          <span class="feed-count" id="eventsCount">0 händelser</span>
-        </div>
+          <div class="board-view is-active" id="eventsListView">
+            <div class="events-grid" id="eventsGrid"></div>
 
-        <div class="events-grid" id="eventsGrid"></div>
-
-        <div class="even  ts-empty glass" id="eventsEmpty" hidden>
-          <p>Inga händelser ännu. Var först med att lägga upp en!</p>
-          <a class="btn-primary" href="html/LaddaUp.html" data-auth="required">Ladda upp en händelse</a>
-        </div>
-
-      </section>
-
-      <!-- RIGHT INFO -->
-      <aside class="right-rail">
-
-        <div class="glass card pad">
-          <div class="card-title">Om sidan</div>
-          <p class="muted">
-            Ett enkelt flöde för lokala händelser i Höganäs.
-          </p>
-        </div>
-
-        <div class="glass card pad details-card" id="eventDetailsCard">
-          <div class="card-title">Eventdetaljer</div>
-          <div class="details-content" id="eventDetailsContent">
-            <p class="details-empty">Välj ett event i listan för att se mer här.</p>
-          </div>
-        </div>
-
-        <div class="glass card pad saved-card" id="savedCard">
-          <div class="card-title">Sparade</div>
-          <ul class="saved-list" id="savedList">
-            <li class="saved-empty">Inga sparade ännu.</li>
-          </ul>
-        </div>
-        
-        <div class="glass card pad">
-          <div class="card-title">Snabbstatus</div>
-          <div class="stats">
-            <div class="stat">
-              <div class="stat-label">Händelser</div>
-              <div class="stat-value" id="eventsCount2">0</div>
+            <div class="events-empty glass" id="eventsEmpty" hidden>
+              <p>Inga händelser ännu. Var först med att lägga upp en!</p>
+              <a class="btn-primary" href="html/LaddaUp.html" data-auth="required">Ladda upp en händelse</a>
             </div>
-            <div class="stat">
-              <div class="stat-label">Senast</div>
-              <div class="stat-value">Idag</div>
+          </div>
+
+          <div class="board-view" id="eventsMapView" hidden>
+            <div class="map-layout">
+              <div class="map-canvas" id="mapCanvas" aria-label="Karta">
+                <div class="map-title">Höganäs • Eventkarta</div>
+                <div class="map-legend">
+                  <span class="legend-dot"></span> Event
+                </div>
+              </div>
+
+              <div class="map-panel glass">
+                <div class="map-panel-head">
+                  <div>
+                    <div class="map-panel-title">Event på kartan</div>
+                    <div class="map-panel-sub">Klicka på en pin för detaljer.</div>
+                  </div>
+                  <span class="map-panel-count" id="mapCount">0</span>
+                </div>
+                <ul class="map-events" id="mapEvents">
+                  <li class="map-empty">Inga event att visa.</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
 
-      </aside>
-    </div>
+        <aside class="board-side">
+          <div class="glass card pad">
+            <div class="card-title">Arrangör?</div>
+            <p class="muted">Något på gång i Höganäs? Skapa en händelse och nå fler besökare.</p>
+            <div class="rail-actions">
+              <a class="btn-primary" href="html/LaddaUp.html" data-auth="required">Skapa händelse</a>
+              <a class="btn-ghost" href="html/Profil.html" data-auth="required">Mitt konto</a>
+            </div>
+          </div>
+
+          <div class="glass card pad details-card" id="eventDetailsCard">
+            <div class="card-title">Eventdetaljer</div>
+            <div class="details-content" id="eventDetailsContent">
+              <p class="details-empty">Välj ett event i listan för att se mer här.</p>
+            </div>
+          </div>
+
+          <div class="glass card pad saved-card" id="savedCard">
+            <div class="card-title">Sparade</div>
+            <ul class="saved-list" id="savedList">
+              <li class="saved-empty">Inga sparade ännu.</li>
+            </ul>
+          </div>
+
+          <div class="glass card pad map-card">
+            <div class="card-title">På kartan</div>
+            <div class="map-preview">
+              <span class="map-pin" aria-hidden="true"></span>
+              <span>Se var eventen händer</span>
+            </div>
+            <p class="muted">Platslänkar öppnas i Google Maps när du klickar på ett event.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <!-- Cookie Banner -->
