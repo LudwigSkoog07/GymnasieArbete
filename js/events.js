@@ -7,10 +7,13 @@ import { supabase } from "./supabaseClient.js";
 const grid = document.getElementById("eventsGrid");
 const empty = document.getElementById("eventsEmpty");
 const countEl = document.getElementById("eventsCount");
+const feedTitleEl = document.getElementById("feedTitle");
+const policeToggleEl = document.getElementById("policeToggle");
 const filterPillsEl = document.getElementById("filterPills");
 const filterCountEl = document.getElementById("filterCount");
 const countEl2 = document.getElementById("eventsCount2");
 const emptyMsgEl = empty?.querySelector("p");
+const emptyCtaEl = empty?.querySelector("a");
 const datePillsEl = document.getElementById("datePills");
 const sortSelectEl = document.getElementById("sortSelect");
 const clearFiltersBtn = document.getElementById("clearFilters");
@@ -50,6 +53,15 @@ let searchPlace = "";
 let searchDate = "";
 let activeView = "list";
 let lastRenderedList = [];
+let policeModeActive = false;
+let policeEvents = [];
+let policeEventsLoaded = false;
+let policeEventsLoading = false;
+let policeEventsError = "";
+
+const POLICE_EVENTS_URL = "https://polisen.se/api/events";
+const POLICE_EVENTS_PROXY_URL = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(POLICE_EVENTS_URL)}`;
+const POLICE_SITE_BASE = "https://polisen.se";
 
 const PROFILE_FIELDS_FULL = "id, username, full_name, avatar_url, is_admin, is_verified";
 const PROFILE_FIELDS_ADMIN_ONLY = "id, username, full_name, avatar_url, is_admin";
@@ -319,6 +331,59 @@ function buildPlaceMeta(placeValue) {
   return {
     label: raw,
     href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(raw)}`
+  };
+}
+
+function toPoliceAbsoluteUrl(rawPath) {
+  const path = String(rawPath || "").trim();
+  if (!path) return POLICE_SITE_BASE;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${POLICE_SITE_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+function parsePoliceDateTime(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return null;
+
+  const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\d{2}:\d{2})$/);
+  if (parts) {
+    const [, year, month, day, hour, minute, second, offset] = parts;
+    const iso = `${year}-${month}-${day}T${String(hour).padStart(2, "0")}:${minute}:${second}${offset}`;
+    const parsed = new Date(iso);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+
+  const normalized = value
+    .replace(" ", "T")
+    .replace(/\s([+-]\d{2}:\d{2})$/, "$1");
+  const dt = new Date(normalized);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function fmtPoliceDateTime(raw) {
+  const dt = parsePoliceDateTime(raw);
+  if (!dt) return "Okänd tid";
+  return dt.toLocaleString("sv-SE", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function normalizePoliceEvent(item) {
+  if (!item || typeof item !== "object") return null;
+  const id = item.id ? String(item.id) : "";
+  if (!id) return null;
+
+  return {
+    id,
+    name: String(item.name || "Händelsenotis"),
+    summary: String(item.summary || "").trim(),
+    type: String(item.type || "Övrigt"),
+    datetime: String(item.datetime || ""),
+    locationName: String(item?.location?.name || "Okänd plats"),
+    href: toPoliceAbsoluteUrl(item.url)
   };
 }
 
@@ -1479,6 +1544,182 @@ function renderEvent(ev) {
   `;
 }
 
+function updateFeedModeUi() {
+  if (feedTitleEl) {
+    feedTitleEl.textContent = policeModeActive ? "Polisens händelser" : "Senaste händelser";
+  }
+
+  if (policeToggleEl) {
+    policeToggleEl.classList.toggle("is-active", policeModeActive);
+    policeToggleEl.setAttribute("aria-pressed", policeModeActive ? "true" : "false");
+  }
+
+  if (emptyCtaEl) {
+    emptyCtaEl.hidden = policeModeActive;
+  }
+}
+
+function renderPoliceEvent(item) {
+  const title = safeText(item?.name || "Händelsenotis");
+  const summary = safeText(item?.summary || "Ingen sammanfattning tillgänglig.");
+  const type = safeText(item?.type || "Övrigt");
+  const when = safeText(fmtPoliceDateTime(item?.datetime));
+  const locationName = safeText(item?.locationName || "Okänd plats");
+  const href = safeText(item?.href || POLICE_SITE_BASE);
+
+  return `
+    <article class="event-card police-card">
+      <div class="event-body">
+        <div class="police-card-head">
+          <span class="police-badge">${type}</span>
+          <span class="police-time">${when}</span>
+        </div>
+
+        <h3 class="event-title">${title}</h3>
+        <p class="event-desc">${summary}</p>
+
+        <div class="event-meta">
+          <span class="event-meta-item">${ICONS.pin}<span>${locationName}</span></span>
+        </div>
+
+        <div class="police-actions">
+          <a class="details-btn ghost" href="${href}" target="_blank" rel="noopener noreferrer">Läs hos Polisen</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderPoliceList(list, emptyLabel = "") {
+  const items = Array.isArray(list) ? list : [];
+  lastRenderedList = [];
+  selectedEventId = null;
+
+  const count = items.length;
+  if (countEl) countEl.textContent = `${count} händelser`;
+  if (filterCountEl) filterCountEl.textContent = `${count} händelser`;
+  if (countEl2) countEl2.textContent = `${count}`;
+
+  if (detailsContentEl) {
+    detailsContentEl.dataset.eventId = "";
+    detailsContentEl.innerHTML = `<p class="details-empty">Detaljer öppnas via knappen "Läs hos Polisen" i varje kort.</p>`;
+  }
+
+  if (!count) {
+    if (grid) grid.innerHTML = "";
+    if (emptyMsgEl) {
+      emptyMsgEl.textContent = emptyLabel || "Inga polisnotiser kunde hämtas just nu.";
+    }
+    if (empty) empty.hidden = false;
+    renderMap([]);
+    return;
+  }
+
+  if (empty) empty.hidden = true;
+  if (grid) grid.innerHTML = items.map(renderPoliceEvent).join("");
+  renderMap([]);
+}
+
+function renderPoliceLoadingState() {
+  if (countEl) countEl.textContent = "Laddar...";
+  if (filterCountEl) filterCountEl.textContent = "Laddar...";
+  if (countEl2) countEl2.textContent = "…";
+  if (empty) empty.hidden = true;
+
+  if (grid) {
+    grid.innerHTML = `
+      <article class="event-card police-card">
+        <div class="event-body">
+          <h3 class="event-title">Hämtar polisens händelser…</h3>
+          <p class="event-desc">Detta kan ta några sekunder.</p>
+        </div>
+      </article>
+    `;
+  }
+}
+
+function sortPoliceEvents(list) {
+  return [...(list || [])].sort((a, b) => {
+    const aDate = parsePoliceDateTime(a?.datetime);
+    const bDate = parsePoliceDateTime(b?.datetime);
+
+    if (!aDate && !bDate) return 0;
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    return bDate.getTime() - aDate.getTime();
+  });
+}
+
+async function fetchPoliceEventsFrom(url) {
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Ogiltigt API-svar");
+  }
+
+  return data;
+}
+
+async function loadPoliceEvents(force = false) {
+  if (policeEventsLoaded && !force) return policeEvents;
+
+  const sources = [POLICE_EVENTS_URL, POLICE_EVENTS_PROXY_URL];
+  let lastErr = null;
+
+  for (const source of sources) {
+    try {
+      const raw = await fetchPoliceEventsFrom(source);
+      policeEvents = sortPoliceEvents(raw.map(normalizePoliceEvent).filter(Boolean));
+      policeEventsLoaded = true;
+      policeEventsError = "";
+      return policeEvents;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  policeEvents = [];
+  policeEventsLoaded = false;
+  policeEventsError = lastErr?.message || "Kunde inte hämta polisnotiser.";
+  throw lastErr || new Error(policeEventsError);
+}
+
+async function setPoliceMode(nextActive) {
+  policeModeActive = !!nextActive;
+  updateFeedModeUi();
+
+  if (!policeModeActive) {
+    setSelectedEvent(null);
+    applyFilters();
+    return;
+  }
+
+  if (policeEventsLoading) return;
+
+  policeEventsLoading = true;
+  if (policeToggleEl) policeToggleEl.disabled = true;
+  renderPoliceLoadingState();
+
+  try {
+    await loadPoliceEvents();
+    renderPoliceList(policeEvents);
+  } catch {
+    renderPoliceList([], policeEventsError || "Kunde inte hämta polisnotiser.");
+  } finally {
+    policeEventsLoading = false;
+    if (policeToggleEl) policeToggleEl.disabled = false;
+    updateFeedModeUi();
+  }
+}
+
 function hashNumber(input) {
   const str = String(input || "");
   let h = 0;
@@ -1574,6 +1815,7 @@ function updateMapSelection() {
 
 function renderList(list, emptyLabel = "") {
   lastRenderedList = list || [];
+  if (emptyCtaEl) emptyCtaEl.hidden = false;
   const count = list.length;
   if (countEl) countEl.textContent = `${count} händelser`;
   if (filterCountEl) filterCountEl.textContent = `${count} händelser`;
@@ -1789,6 +2031,8 @@ function setActiveSort(sort) {
 }
 
 function resetFilters() {
+  policeModeActive = false;
+  updateFeedModeUi();
   activeCategory = "Alla";
   activeDateRange = "Alla";
   activeSort = "Senast";
@@ -1880,6 +2124,12 @@ function sortEvents(list) {
 }
 
 function applyFilters() {
+  if (policeModeActive) {
+    renderFeatured([]);
+    renderPoliceList(policeEvents, policeEventsError);
+    return;
+  }
+
   let list = activeCategory === "Alla"
     ? allEvents
     : allEvents.filter((ev) => normalizeCategory(ev.category) === activeCategory);
@@ -2321,6 +2571,13 @@ function wireSort() {
   });
 }
 
+function wirePoliceToggle() {
+  if (!policeToggleEl) return;
+  policeToggleEl.addEventListener("click", async () => {
+    await setPoliceMode(!policeModeActive);
+  });
+}
+
 function wireClearFilters() {
   if (!clearFiltersBtn) return;
   clearFiltersBtn.addEventListener("click", () => {
@@ -2396,6 +2653,7 @@ function wireSavedList() {
   loadSavedFromStorage();
   ensureAttendeesModal();
   ensureAdminToggle();
+  updateFeedModeUi();
   renderFilters();
   renderDateFilters();
   setupDateInput();
@@ -2408,6 +2666,7 @@ function wireSavedList() {
   wireMap();
   wireDateFilters();
   wireSort();
+  wirePoliceToggle();
   wireClearFilters();
   wireDetailsActions();
   wireSavedList();

@@ -205,7 +205,18 @@
 
         <!-- Events -->
         <div class="feed-head" id="events">
-          <h2 class="feed-title">Senaste händelser</h2>
+          <div class="feed-head-left">
+            <h2 class="feed-title" id="feedTitle">Senaste händelser</h2>
+            <button
+              class="feed-source-toggle"
+              id="policeToggle"
+              type="button"
+              aria-pressed="false"
+              title="Visa polisens händelsenotiser"
+            >
+              Polisen
+            </button>
+          </div>
           <span class="feed-count" id="eventsCount">0 händelser</span>
         </div>
 

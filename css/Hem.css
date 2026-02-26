@@ -1,5 +1,5 @@
-/* =========================
-   Hem.css — Apple Glass + FB layout (luftig)
+ï»¿/* =========================
+   Hem.css â€” Apple Glass + FB layout (luftig)
    - 3 kolumner desktop
    - mer spacing
    - clean glass cards
@@ -44,8 +44,8 @@
 }
 
 /* =========================
-   Apple-ish glass (lokalt på sidan)
-   (du kan låta Global ha sin .glass, men Hem overridear för ljus tema)
+   Apple-ish glass (lokalt pÃ¥ sidan)
+   (du kan lÃ¥ta Global ha sin .glass, men Hem overridear fÃ¶r ljus tema)
 ========================= */
 .glass{
   background: var(--surface);
@@ -287,6 +287,64 @@
   color: var(--text-muted);
 }
 
+.feed-head-left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.feed-source-toggle{
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(185, 28, 28, 0.24);
+  background: rgba(239, 68, 68, 0.14);
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 160ms cubic-bezier(.2,1.1,.2,1),
+              background 160ms ease,
+              border-color 160ms ease,
+              box-shadow 160ms ease;
+}
+
+.feed-source-toggle:hover{
+  transform: translateY(-1px);
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(185, 28, 28, 0.35);
+}
+
+.feed-source-toggle.is-active{
+  color: #fff;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  border-color: #b91c1c;
+  box-shadow: 0 12px 24px rgba(185, 28, 28, 0.24);
+}
+
+:root[data-theme="dark"] .feed-source-toggle{
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(220, 38, 38, 0.26);
+}
+
+:root[data-theme="dark"] .feed-source-toggle.is-active{
+  color: #fff5f5;
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
+  border-color: rgba(254, 202, 202, 0.45);
+}
+
+@media (max-width: 620px){
+  .feed-head{
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .feed-head-left{
+    flex-wrap: wrap;
+  }
+}
 /* =========================
    Filters
 ========================= */
@@ -494,8 +552,8 @@
   --cat-text: #92400e;
   --cat-border: rgba(146,64,14,0.22);
 }
-.filter-pill[data-category="Föreläsning"],
-.event-badge.cat[data-category="Föreläsning"]{
+.filter-pill[data-category="FÃ¶relÃ¤sning"],
+.event-badge.cat[data-category="FÃ¶relÃ¤sning"]{
   --cat-bg: rgba(254,202,202,0.9);
   --cat-text: #b91c1c;
   --cat-border: rgba(185,28,28,0.22);
@@ -566,8 +624,8 @@
   --cat-text: #fde68a;
   --cat-border: rgba(250,204,21,0.35);
 }
-:root[data-theme="dark"] .filter-pill[data-category="Föreläsning"],
-:root[data-theme="dark"] .event-badge.cat[data-category="Föreläsning"]{
+:root[data-theme="dark"] .filter-pill[data-category="FÃ¶relÃ¤sning"],
+:root[data-theme="dark"] .event-badge.cat[data-category="FÃ¶relÃ¤sning"]{
   --cat-bg: rgba(185,28,28,0.28);
   --cat-text: #fecaca;
   --cat-border: rgba(248,113,113,0.35);
@@ -863,6 +921,60 @@
   font-weight: 700;
 }
 
+.police-card .event-body{
+  gap: 12px;
+}
+
+.police-card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.police-badge{
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.police-time{
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 850;
+}
+
+.police-location{
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 750;
+}
+
+.police-actions{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.police-actions .details-btn{
+  height: 34px;
+  font-size: 12px;
+}
+
+:root[data-theme="dark"] .police-badge{
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(220, 38, 38, 0.24);
+}
 /* =========================
    Empty state
 ========================= */
@@ -1642,4 +1754,5 @@
   transform: none !important;
   box-shadow: none !important;
 }
+
 
