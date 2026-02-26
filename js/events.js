@@ -16,6 +16,19 @@ const sortSelectEl = document.getElementById("sortSelect");
 const clearFiltersBtn = document.getElementById("clearFilters");
 const detailsContentEl = document.getElementById("eventDetailsContent");
 const savedListEl = document.getElementById("savedList");
+const searchWhatEl = document.getElementById("searchWhat");
+const searchWhenEl = document.getElementById("searchWhen");
+const searchWhereEl = document.getElementById("searchWhere");
+const searchBtnEl = document.getElementById("searchBtn");
+const featuredGridEl = document.getElementById("featuredGrid");
+const featuredEmptyEl = document.getElementById("featuredEmpty");
+const featuredCountEl = document.getElementById("featuredCount");
+const listViewEl = document.getElementById("eventsListView");
+const mapViewEl = document.getElementById("eventsMapView");
+const mapCanvasEl = document.getElementById("mapCanvas");
+const mapEventsEl = document.getElementById("mapEvents");
+const mapCountEl = document.getElementById("mapCount");
+const viewToggleEls = Array.from(document.querySelectorAll(".view-toggle [data-view]"));
 
 /* =========================
    State
@@ -32,6 +45,11 @@ let adminProfiles = [];
 let adminUserSearch = "";
 let adminProfilesError = false;
 let adminExpandedIds = new Set();
+let searchQuery = "";
+let searchPlace = "";
+let searchDate = "";
+let activeView = "list";
+let lastRenderedList = [];
 
 const PROFILE_FIELDS_FULL = "id, username, full_name, avatar_url, is_admin, is_verified";
 const PROFILE_FIELDS_ADMIN_ONLY = "id, username, full_name, avatar_url, is_admin";
@@ -97,6 +115,20 @@ function fmtDateSv(d) {
   });
 }
 
+function fmtDateShortSv(d) {
+  if (!d) return "";
+  const dt = typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)
+    ? new Date(`${d}T00:00:00`)
+    : new Date(d);
+
+  if (isNaN(dt.getTime())) return "";
+
+  return dt.toLocaleDateString("sv-SE", {
+    day: "2-digit",
+    month: "short"
+  });
+}
+
 function truncate(text, max = 120) {
   const s = String(text || "").trim();
   if (!s) return "";
@@ -111,6 +143,10 @@ function safeText(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function normalizeText(raw) {
+  return String(raw || "").trim().toLowerCase();
 }
 
 function normalizeCategory(raw) {
@@ -324,6 +360,14 @@ function eventStartAsDate(ev) {
   const dateStr = typeof ev.date === "string" ? ev.date : new Date(ev.date).toISOString().slice(0, 10);
   const dt = new Date(`${dateStr}T${t}:00`);
   return isNaN(dt.getTime()) ? null : dt;
+}
+
+function eventDateKey(ev) {
+  if (!ev?.date) return "";
+  if (typeof ev.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(ev.date)) return ev.date;
+  const dt = new Date(ev.date);
+  if (isNaN(dt.getTime())) return "";
+  return dt.toISOString().slice(0, 10);
 }
 
 function startOfDay(d) {
@@ -1237,6 +1281,79 @@ async function loadProfilesForUserIds(userIds) {
 /* =========================
    Render
 ========================= */
+function pickFeaturedEvents(list) {
+  const items = (list || []).filter((ev) => !!eventStartAsDate(ev) || !!ev.date);
+  const sorted = [...items].sort((a, b) => {
+    const pop = (b.att_count || 0) - (a.att_count || 0);
+    if (pop !== 0) return pop;
+    const aDate = eventStartAsDate(a);
+    const bDate = eventStartAsDate(b);
+    if (aDate && bDate) {
+      const diff = aDate.getTime() - bDate.getTime();
+      if (diff !== 0) return diff;
+    } else if (aDate) {
+      return -1;
+    } else if (bDate) {
+      return 1;
+    }
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+
+  return sorted.slice(0, 3);
+}
+
+function renderFeaturedCard(ev) {
+  const imgs = ev.image_urls || [];
+  const firstImg = imgs.length ? imgs[0] : null;
+  const titleSafe = safeText(ev.title || "Utan titel");
+  const dateLabel = fmtDateShortSv(ev.date);
+  const dateText = fmtDateSv(ev.date);
+  const endResolved = resolveEndTime(ev);
+  const timeRange = ev.time
+    ? (endResolved && endResolved !== "sent"
+        ? `${fmtTime(ev.time)}–${fmtTime(endResolved)}`
+        : (endResolved === "sent" ? `${fmtTime(ev.time)} • Sent` : fmtTime(ev.time)))
+    : "";
+  const placeMeta = buildPlaceMeta(ev.place);
+
+  const meta = [dateText, timeRange, placeMeta.label].filter(Boolean).join(" • ");
+  const metaSafe = safeText(meta);
+
+  return `
+    <article class="featured-card" data-event-id="${ev.id}">
+      <div class="featured-media">
+        ${firstImg
+          ? `<img src="${firstImg}" alt="${titleSafe}" loading="lazy">`
+          : `<div class="event-media-placeholder">Ingen bild</div>`}
+        <span class="featured-badge">Utvalt</span>
+        ${dateLabel ? `<span class="featured-date">${safeText(dateLabel)}</span>` : ""}
+      </div>
+      <div class="featured-body">
+        <h3 class="featured-title">${titleSafe}</h3>
+        ${meta ? `<div class="featured-meta">${metaSafe}</div>` : ""}
+        <button class="featured-cta" type="button" data-action="featured-open" data-id="${ev.id}">
+          Visa detaljer
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function renderFeatured(list) {
+  if (!featuredGridEl) return;
+  const items = pickFeaturedEvents(list);
+  if (featuredCountEl) featuredCountEl.textContent = `${items.length} utvalda`;
+
+  if (!items.length) {
+    featuredGridEl.innerHTML = "";
+    if (featuredEmptyEl) featuredEmptyEl.hidden = false;
+    return;
+  }
+
+  if (featuredEmptyEl) featuredEmptyEl.hidden = true;
+  featuredGridEl.innerHTML = items.map(renderFeaturedCard).join("");
+}
+
 function renderEvent(ev) {
   const imgs = ev.image_urls || [];
   const firstImg = imgs.length ? imgs[0] : null;
@@ -1362,7 +1479,101 @@ function renderEvent(ev) {
   `;
 }
 
+function hashNumber(input) {
+  const str = String(input || "");
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+function markerPosition(id) {
+  const h = hashNumber(id);
+  const x = 10 + (h % 80);
+  const y = 12 + ((h >> 7) % 76);
+  return { x, y };
+}
+
+function renderMap(list) {
+  if (!mapCanvasEl || !mapEventsEl) return;
+
+  lastRenderedList = list || [];
+  if (mapCountEl) mapCountEl.textContent = `${lastRenderedList.length}`;
+
+  mapCanvasEl.querySelectorAll(".map-marker").forEach((el) => el.remove());
+
+  if (!lastRenderedList.length) {
+    mapEventsEl.innerHTML = `<li class="map-empty">Inga event att visa.</li>`;
+    return;
+  }
+
+  const markers = lastRenderedList.slice(0, 24);
+  for (const ev of markers) {
+    const pos = markerPosition(ev.id);
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = "map-marker";
+    marker.style.left = `${pos.x}%`;
+    marker.style.top = `${pos.y}%`;
+    marker.dataset.eventId = String(ev.id);
+    marker.setAttribute("aria-label", ev.title || "Event");
+    marker.title = ev.title || "Event";
+    if (selectedEventId && String(ev.id) === String(selectedEventId)) {
+      marker.classList.add("is-selected");
+    }
+    mapCanvasEl.appendChild(marker);
+  }
+
+  mapEventsEl.innerHTML = lastRenderedList.map((ev) => {
+    const dateText = fmtDateSv(ev.date);
+    const endResolved = resolveEndTime(ev);
+    const timeRange = ev.time
+      ? (endResolved && endResolved !== "sent"
+          ? `${fmtTime(ev.time)}–${fmtTime(endResolved)}`
+          : (endResolved === "sent" ? `${fmtTime(ev.time)} • Sent` : fmtTime(ev.time)))
+      : "";
+    const placeMeta = buildPlaceMeta(ev.place);
+    const meta = [dateText, timeRange, placeMeta.label].filter(Boolean).join(" • ");
+    const metaSafe = safeText(meta);
+    const titleSafe = safeText(ev.title || "Utan titel");
+    const placeLink = placeMeta.href
+      ? `<a class="map-item-link" href="${placeMeta.href}" target="_blank" rel="noopener noreferrer">Öppna karta</a>`
+      : "";
+
+    const isSelected = selectedEventId && String(ev.id) === String(selectedEventId);
+
+    return `
+      <li class="map-item ${isSelected ? "is-selected" : ""}" data-event-id="${ev.id}">
+        <div class="map-item-title">${titleSafe}</div>
+        ${meta ? `<div class="map-item-meta">${metaSafe}</div>` : ""}
+        <div class="map-item-actions">
+          <button class="map-item-btn" type="button" data-action="map-select" data-id="${ev.id}">Visa detaljer</button>
+          ${placeLink}
+        </div>
+      </li>
+    `;
+  }).join("");
+}
+
+function updateMapSelection() {
+  if (!mapCanvasEl) return;
+  mapCanvasEl.querySelectorAll(".map-marker").forEach((marker) => {
+    const isSelected = selectedEventId && marker.dataset.eventId === String(selectedEventId);
+    marker.classList.toggle("is-selected", !!isSelected);
+  });
+
+  if (mapEventsEl) {
+    mapEventsEl.querySelectorAll(".map-item").forEach((item) => {
+      const isSelected = selectedEventId && item.dataset.eventId === String(selectedEventId);
+      item.classList.toggle("is-selected", !!isSelected);
+    });
+  }
+}
+
 function renderList(list, emptyLabel = "") {
+  lastRenderedList = list || [];
   const count = list.length;
   if (countEl) countEl.textContent = `${count} händelser`;
   if (filterCountEl) filterCountEl.textContent = `${count} händelser`;
@@ -1377,6 +1588,7 @@ function renderList(list, emptyLabel = "") {
     }
     if (empty) empty.hidden = false;
     updateSavedList();
+    renderMap(list);
     return;
   }
 
@@ -1384,6 +1596,7 @@ function renderList(list, emptyLabel = "") {
   if (grid) grid.innerHTML = list.map(renderEvent).join("");
   updateCardStates();
   updateSavedList();
+  renderMap(list);
 }
 
 function updateCardStates() {
@@ -1394,6 +1607,7 @@ function updateCardStates() {
     card.classList.toggle("is-selected", !!selectedId && id === selectedId);
     card.classList.toggle("is-saved", isSavedEvent(id));
   });
+  updateMapSelection();
 }
 
 function updateSavedList() {
@@ -1509,6 +1723,7 @@ function setSelectedEvent(ev) {
     detailsContentEl.innerHTML = buildDetailsMarkup(ev);
   }
   updateCardStates();
+  updateMapSelection();
 }
 
 function syncSelectedEvent() {
@@ -1580,6 +1795,7 @@ function resetFilters() {
   renderFilters();
   renderDateFilters();
   if (sortSelectEl) sortSelectEl.value = activeSort;
+  clearSearchInputs();
   applyFilters();
 }
 
@@ -1602,6 +1818,34 @@ function filterByDate(list) {
     const dt = eventStartAsDate(ev);
     if (!dt) return false;
     return dt >= range.start && dt <= range.end;
+  });
+}
+
+function filterBySearch(list) {
+  const q = normalizeText(searchQuery);
+  const p = normalizeText(searchPlace);
+
+  if (!q && !p) return list;
+
+  return (list || []).filter((ev) => {
+    if (q) {
+      const hay = normalizeText([
+        ev.title,
+        ev.info,
+        ev.category,
+        ev?.profiles?.full_name,
+        ev?.profiles?.username
+      ].filter(Boolean).join(" "));
+      if (!hay.includes(q)) return false;
+    }
+
+    if (p) {
+      const placeRaw = normalizeText(ev.place || "");
+      const placeLabel = normalizeText(extractPlaceLabelFromUrl(normalizeMapsUrl(ev.place)));
+      if (!placeRaw.includes(p) && !placeLabel.includes(p)) return false;
+    }
+
+    return true;
   });
 }
 
@@ -1640,9 +1884,74 @@ function applyFilters() {
     ? allEvents
     : allEvents.filter((ev) => normalizeCategory(ev.category) === activeCategory);
 
-  list = filterByDate(list);
+  if (searchDate) {
+    list = (list || []).filter((ev) => eventDateKey(ev) === searchDate);
+  } else {
+    list = filterByDate(list);
+  }
+  list = filterBySearch(list);
   list = sortEvents(list);
+  renderFeatured(allEvents);
   renderList(list);
+}
+
+function syncSearchState() {
+  searchQuery = normalizeText(searchWhatEl?.value);
+  searchPlace = normalizeText(searchWhereEl?.value);
+  searchDate = searchWhenEl?.value ? String(searchWhenEl.value) : "";
+}
+
+function applySearchFromInputs(shouldScroll = false) {
+  syncSearchState();
+  applyFilters();
+  if (shouldScroll) {
+    const section = document.getElementById("events");
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function setDateInputEmpty() {
+  if (!searchWhenEl) return;
+  const placeholder = searchWhenEl.dataset.placeholder || "Välj datum";
+  if (!searchWhenEl.value) {
+    searchWhenEl.type = "text";
+    searchWhenEl.placeholder = placeholder;
+  }
+}
+
+function setupDateInput() {
+  if (!searchWhenEl) return;
+  const placeholder = searchWhenEl.dataset.placeholder || "Välj datum";
+
+  const setDateMode = () => {
+    if (searchWhenEl.type !== "date") searchWhenEl.type = "date";
+    searchWhenEl.placeholder = "";
+  };
+
+  const setTextModeIfEmpty = () => {
+    if (!searchWhenEl.value) {
+      searchWhenEl.type = "text";
+      searchWhenEl.placeholder = placeholder;
+    }
+  };
+
+  searchWhenEl.addEventListener("focus", setDateMode);
+  searchWhenEl.addEventListener("click", setDateMode);
+  searchWhenEl.addEventListener("blur", setTextModeIfEmpty);
+
+  setTextModeIfEmpty();
+}
+
+function clearSearchInputs() {
+  if (searchWhatEl) searchWhatEl.value = "";
+  if (searchWhereEl) searchWhereEl.value = "";
+  if (searchWhenEl) {
+    searchWhenEl.value = "";
+    setDateInputEmpty();
+  }
+  searchQuery = "";
+  searchPlace = "";
+  searchDate = "";
 }
 
 /* =========================
@@ -1883,6 +2192,119 @@ function wireFilters() {
   });
 }
 
+function wireCategoryCards() {
+  const cards = Array.from(document.querySelectorAll(".category-card[data-category]"));
+  if (!cards.length) return;
+
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      const cat = card.dataset.category || "Alla";
+      setActiveCategory(cat);
+      const section = document.getElementById("events");
+      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function wireSearch() {
+  if (searchBtnEl) {
+    searchBtnEl.addEventListener("click", () => applySearchFromInputs(true));
+  }
+
+  const handleEnter = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applySearchFromInputs(true);
+    }
+  };
+
+  if (searchWhatEl) {
+    searchWhatEl.addEventListener("keydown", handleEnter);
+    searchWhatEl.addEventListener("input", () => {
+      clearTimeout(searchWhatEl._timer);
+      searchWhatEl._timer = setTimeout(() => applySearchFromInputs(false), 120);
+    });
+  }
+
+  if (searchWhereEl) {
+    searchWhereEl.addEventListener("keydown", handleEnter);
+    searchWhereEl.addEventListener("input", () => {
+      clearTimeout(searchWhereEl._timer);
+      searchWhereEl._timer = setTimeout(() => applySearchFromInputs(false), 120);
+    });
+  }
+
+  if (searchWhenEl) {
+    searchWhenEl.addEventListener("keydown", handleEnter);
+    searchWhenEl.addEventListener("change", () => applySearchFromInputs(false));
+  }
+}
+
+function wireFeatured() {
+  if (!featuredGridEl) return;
+
+  featuredGridEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action=\"featured-open\"]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (!id) return;
+
+    const ev = allEvents.find((item) => String(item.id) === String(id));
+    if (ev) {
+      setSelectedEvent(ev);
+      const card = grid?.querySelector(`.event-card[data-event-id="${String(id)}"]`);
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  });
+}
+
+function setBoardView(view) {
+  activeView = view === "map" ? "map" : "list";
+  if (listViewEl) listViewEl.hidden = activeView !== "list";
+  if (mapViewEl) mapViewEl.hidden = activeView !== "map";
+
+  viewToggleEls.forEach((btn) => {
+    const isActive = btn.dataset.view === activeView;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  if (activeView === "map") renderMap(lastRenderedList);
+}
+
+function wireViewToggle() {
+  if (!viewToggleEls.length) return;
+  viewToggleEls.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setBoardView(btn.dataset.view || "list");
+    });
+  });
+}
+
+function wireMap() {
+  if (mapCanvasEl) {
+    mapCanvasEl.addEventListener("click", (e) => {
+      const marker = e.target.closest(".map-marker");
+      if (!marker) return;
+      const id = marker.dataset.eventId;
+      const ev = allEvents.find((item) => String(item.id) === String(id));
+      if (ev) setSelectedEvent(ev);
+    });
+  }
+
+  if (mapEventsEl) {
+    mapEventsEl.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return;
+      const btn = e.target.closest("[data-action]");
+      const item = e.target.closest(".map-item");
+      const id = btn?.dataset?.id || item?.dataset?.eventId;
+      if (!id) return;
+      const ev = allEvents.find((evItem) => String(evItem.id) === String(id));
+      if (ev) setSelectedEvent(ev);
+    });
+  }
+}
+
 function wireDateFilters() {
   if (!datePillsEl) return;
   datePillsEl.addEventListener("click", (e) => {
@@ -1976,14 +2398,21 @@ function wireSavedList() {
   ensureAdminToggle();
   renderFilters();
   renderDateFilters();
+  setupDateInput();
   if (sortSelectEl) sortSelectEl.value = activeSort;
   wireFilters();
+  wireCategoryCards();
+  wireSearch();
+  wireFeatured();
+  wireViewToggle();
+  wireMap();
   wireDateFilters();
   wireSort();
   wireClearFilters();
   wireDetailsActions();
   wireSavedList();
   wireEvents();
+  setBoardView(activeView);
   loadEvents();
 })();
 

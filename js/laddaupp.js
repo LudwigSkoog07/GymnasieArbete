@@ -208,10 +208,28 @@ function validate() {
 /* =========================
    Storage upload helpers
 ========================= */
+function createId() {
+  // Prefer native UUID if available (requires secure context).
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+
+  // Fallback to RFC4122 v4 using crypto.getRandomValues when possible.
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
+  // Last resort: time + random (not cryptographically strong).
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function safePath(file, userId) {
   const extRaw = (file.name?.split(".").pop() || "jpg").toLowerCase();
   const ext = extRaw.replace(/[^a-z0-9]/g, "") || "jpg";
-  const id = crypto.randomUUID();
+  const id = createId();
   const yyyy = new Date().getFullYear();
   return `events/${userId}/${yyyy}/${id}.${ext}`;
 }

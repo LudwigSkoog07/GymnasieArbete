@@ -658,6 +658,11 @@
   background: linear-gradient(120deg, rgba(148,163,184,0.18), rgba(226,232,240,0.35));
 }
 
+:root[data-theme="dark"] .event-media-placeholder{
+  color: var(--text-muted);
+  background: linear-gradient(120deg, rgba(30,41,59,0.55), rgba(15,23,42,0.85));
+}
+
 .event-badges{
   position:absolute;
   inset: 12px;
@@ -1637,8 +1642,4 @@
   transform: none !important;
   box-shadow: none !important;
 }
-
-
-
-
 

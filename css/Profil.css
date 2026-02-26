@@ -174,7 +174,7 @@
 
 .upload-pill:hover{
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(15,23,42,0.08);
+  box-shadow: var(--shadow-sm);
   background: var(--surface-stronger);
   border-color: var(--border-strong);
 }
@@ -411,7 +411,7 @@
 .my-img-empty{
   width: 100%;
   height: 100%;
-  background: rgba(15,23,42,0.04);
+  background: var(--surface-muted-2);
 }
 
 .my-text{ min-width: 0; }
